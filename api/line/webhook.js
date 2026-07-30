@@ -33,30 +33,25 @@ async function processLineEvent(event) {
   const userId = event.source?.userId;
   const eventId = event.webhookEventId;
 
-  // 防重複處理
   if (eventId && (await isDuplicateEvent(eventId))) return;
 
   // ========== 指令分流 ==========
   
-  // 1. 綁定指令
   if (text.startsWith("綁定 ")) {
     await handleBind(event, text, userId, eventId);
     return;
   }
 
-  // 2. 解除綁定
   if (text === "解除綁定") {
     await handleUnbind(event, userId, eventId);
     return;
   }
 
-  // 3. 查詢自己的記點
   if (text === "查詢" || text === "我的記點") {
     await handleQuery(event, userId, eventId);
     return;
   }
 
-  // 4. 記點指令
   if (text.startsWith("記點 ")) {
     await handleRecord(event, text, eventId);
     return;
@@ -74,8 +69,8 @@ async function handleBind(event, text, userId, eventId) {
 
   const [, room, bed] = match;
 
-  // 檢查該床位是否存在
-  const { data: student, error } = await supabase
+  // 檢查目標床位是否存在
+  const { data: targetStudent, error } = await supabase
     .from("students")
     .select("id,name,room,bed,line_user_id")
     .eq("room", room)
@@ -88,24 +83,39 @@ async function handleBind(event, text, userId, eventId) {
     return;
   }
 
-  if (!student) {
+  if (!targetStudent) {
     await replyText(event.replyToken, `找不到 ${room}-${bed} 的學生資料。\n請確認床位是否正確，或請管理員先匯入你的資料。`);
     await saveLineEvent(event, text, eventId);
     return;
   }
 
-  // 檢查是否已被其他人綁定
-  if (student.line_user_id && student.line_user_id !== userId) {
+  // 檢查這個 LINE 帳號是否已綁定其他人
+  const { data: oldBind } = await supabase
+    .from("students")
+    .select("id,name,room,bed")
+    .eq("line_user_id", userId)
+    .maybeSingle();
+
+  // 如果這個 LINE 帳號已綁定別人，先解除
+  if (oldBind && oldBind.id !== targetStudent.id) {
+    await supabase
+      .from("students")
+      .update({ line_user_id: null })
+      .eq("id", oldBind.id);
+  }
+
+  // 檢查目標床位是否已被「別人」綁定
+  if (targetStudent.line_user_id && targetStudent.line_user_id !== userId) {
     await replyText(event.replyToken, `⚠️ ${room}-${bed} 已被其他 LINE 帳號綁定。\n如需換綁，請聯繫管理員。`);
     await saveLineEvent(event, text, eventId);
     return;
   }
 
-  // 更新綁定
+  // 綁定到新床位（或重新綁定同一人）
   const { error: updateError } = await supabase
     .from("students")
     .update({ line_user_id: userId })
-    .eq("id", student.id);
+    .eq("id", targetStudent.id);
 
   if (updateError) {
     await replyText(event.replyToken, "綁定失敗，請稍後再試。");
@@ -113,7 +123,14 @@ async function handleBind(event, text, userId, eventId) {
     return;
   }
 
-  await replyText(event.replyToken, `✅ 綁定成功！\n${room}-${bed} ${student.name}\n現在管理員可以 @你 來記點了。`);
+  // 回覆訊息
+  let msg = `✅ 綁定成功！\n${room}-${bed} ${targetStudent.name}\n現在管理員可以 @你 來記點了。`;
+  
+  if (oldBind && oldBind.id !== targetStudent.id) {
+    msg = `✅ 已從 ${oldBind.room}-${oldBind.bed} 換到 ${room}-${bed}\n${targetStudent.name}\n管理員 @你 會記到新的床位。`;
+  }
+
+  await replyText(event.replyToken, msg);
   await saveLineEvent(event, text, eventId);
 }
 
@@ -184,10 +201,8 @@ async function handleRecord(event, text, eventId) {
   let parsed = null;
 
   if (mentionees.length > 0) {
-    // 模式 A: @某人 記點
+    // 模式 A: @某人 記點 → 用 line_user_id 找人（跟著人走！）
     const targetUserId = mentionees[0].userId;
-    
-    // 從 text 中移除 @標記，取得剩餘內容
     const mentionText = event.message.mention.mentionees[0].text || "";
     const remainingText = text.replace(mentionText, "").trim();
     parsed = parsePointsAndReason(remainingText);
