@@ -187,7 +187,7 @@
     </div>
   </div>
 
-  <!-- 學生詳情 Modal（新增） -->
+  <!-- 學生詳情 Modal -->
   <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="if(event.target===this)closeStudentDetail()">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
@@ -196,7 +196,7 @@
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
-      
+
       <div class="grid md:grid-cols-2 gap-6">
         <!-- 左側：編輯資料 -->
         <div>
@@ -240,7 +240,7 @@
             </div>
           </form>
         </div>
-        
+
         <!-- 右側：記點紀錄 -->
         <div>
           <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
@@ -391,7 +391,7 @@
 
     function filterStudents() {
       const keyword = document.getElementById('studentSearch').value.toLowerCase();
-      const filtered = allStudents.filter(s => 
+      const filtered = allStudents.filter(s =>
         s.name.toLowerCase().includes(keyword) ||
         (s.student_number || '').toLowerCase().includes(keyword) ||
         s.room.toLowerCase().includes(keyword) ||
@@ -449,7 +449,7 @@
       } catch (e) { showToast('載入排行榜失敗：' + e.message); }
     }
 
-    // ===== 學生詳情（新增） =====
+    // ===== 學生詳情（修復版：直接呼叫 API，不再依賴 allRecordsData）=====
     function openStudentDetail(id) {
       currentDetailStudentId = id;
       const student = allStudents.find(s => s.id === id);
@@ -457,7 +457,7 @@
         showToast('找不到學生資料');
         return;
       }
-      
+
       const form = document.getElementById('editForm');
       form.id.value = student.id;
       form.name.value = student.name;
@@ -466,9 +466,9 @@
       form.bed.value = student.bed;
       form.class_name.value = student.class_name || '';
       form.role.value = student.role || 'student';
-      
+
       loadStudentRecords(id);
-      
+
       document.getElementById('detailModal').classList.remove('hidden');
       document.getElementById('detailModal').classList.add('flex');
     }
@@ -482,22 +482,12 @@
     async function loadStudentRecords(id) {
       const container = document.getElementById('studentRecordsList');
       container.innerHTML = '<div class="text-sm text-gray-400 text-center py-4">載入中...</div>';
-      
+
       try {
-        let records = [];
-        
-        // 如果 allRecordsData 已載入，直接過濾
-        if (allRecordsData.length > 0) {
-          records = allRecordsData.filter(r => 
-            r.student_id === id || r.students?.id === id
-          );
-        } else {
-          // 否則嘗試從 API 載入（帶 query parameter）
-          const res = await fetch(`${API_BASE}/api/admin/records?student_id=${id}`);
-          const json = await res.json();
-          records = json.data || [];
-        }
-        
+        // 🔧 修復：直接呼叫 API 帶 student_id 參數，不再依賴 allRecordsData
+        const res = await fetch(`${API_BASE}/api/admin/records?student_id=${id}`);
+        const json = await res.json();
+        const records = json.data || [];
         renderStudentRecords(records);
       } catch (e) {
         container.innerHTML = `<div class="text-sm text-red-400 text-center py-4">載入失敗：${e.message}</div>`;
@@ -510,9 +500,9 @@
         container.innerHTML = '<div class="text-sm text-gray-400 text-center py-4">暫無記點紀錄 👍</div>';
         return;
       }
-      
+
       const totalPoints = records.reduce((sum, r) => sum + (r.points || 0), 0);
-      
+
       container.innerHTML = `
         <div class="bg-red-50 border border-red-100 rounded-lg p-2 mb-3 text-center">
           <span class="text-xs text-red-600 font-medium">累計記點</span>
@@ -644,10 +634,9 @@
         importData.push(row);
       }
 
-      // 預覽
       const preview = importData.slice(0, 5);
       document.getElementById('importPreviewHead').innerHTML = headers.map(h => `<th class="px-2 py-1 text-left font-medium text-gray-600">${h}</th>`).join('');
-      document.getElementById('importPreviewBody').innerHTML = preview.map(row => 
+      document.getElementById('importPreviewBody').innerHTML = preview.map(row =>
         `<tr class="border-b border-gray-100">${headers.map(h => `<td class="px-2 py-1 text-gray-700">${row[h] || '-'}</td>`).join('')}</tr>`
       ).join('');
       document.getElementById('importCount').textContent = `共 ${importData.length} 筆資料，預覽前 5 筆`;
