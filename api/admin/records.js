@@ -12,10 +12,11 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from("violation_records")
       .select(`
         id,
+        student_id,
         violation_date,
         points,
         reason,
@@ -23,6 +24,14 @@ export default async function handler(req, res) {
         students:student_id (name, room, bed)
       `)
       .order("violation_date", { ascending: false });
+
+    // 如果帶了 student_id，只查該學生的記點
+    const studentId = req.query?.student_id;
+    if (studentId) {
+      query = query.eq("student_id", studentId);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     res.status(200).json({ data });
