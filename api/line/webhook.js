@@ -36,6 +36,11 @@ async function processLineEvent(event) {
   if (eventId && (await isDuplicateEvent(eventId))) return;
 
   // ========== 指令分流 ==========
+  if (text === "我是誰") {
+  await replyText(event.replyToken, `你的 LINE ID：\n${userId}\n\n請把這串 ID 給管理員設定。`);
+  await saveLineEvent(event, text, eventId);
+  return;
+}
   
   if (text.startsWith("綁定 ")) {
     await handleBind(event, text, userId, eventId);
