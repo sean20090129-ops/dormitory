@@ -1,4 +1,3 @@
-// api/line/webhook.js
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
@@ -35,7 +34,6 @@ async function processLineEvent(event) {
 
   if (eventId && (await isDuplicateEvent(eventId))) return;
 
-  // ========== 指令分流 ==========
   if (text === "我是誰") {
     await replyText(event.replyToken, `你的 LINE ID：\n${userId}\n\n請把這串 ID 給管理員設定。`);
     await saveLineEvent(event, text, eventId);
@@ -63,7 +61,6 @@ async function processLineEvent(event) {
   }
 }
 
-// ========== 綁定功能（空格可選） ==========
 async function handleBind(event, text, userId, eventId) {
   const match = text.match(/^綁定\s*(\d+)-(\d+)$/);
   if (!match) {
@@ -100,10 +97,7 @@ async function handleBind(event, text, userId, eventId) {
     .maybeSingle();
 
   if (oldBind && oldBind.id !== targetStudent.id) {
-    await supabase
-      .from("students")
-      .update({ line_user_id: null })
-      .eq("id", oldBind.id);
+    await supabase.from("students").update({ line_user_id: null }).eq("id", oldBind.id);
   }
 
   if (targetStudent.line_user_id && targetStudent.line_user_id !== userId) {
@@ -132,7 +126,6 @@ async function handleBind(event, text, userId, eventId) {
   await saveLineEvent(event, text, eventId);
 }
 
-// ========== 解除綁定（修正：加入 text 參數） ==========
 async function handleUnbind(event, text, userId, eventId) {
   const { data: student } = await supabase
     .from("students")
@@ -151,7 +144,6 @@ async function handleUnbind(event, text, userId, eventId) {
   await saveLineEvent(event, text, eventId);
 }
 
-// ========== 查詢記點（修正：加入 text 參數） ==========
 async function handleQuery(event, text, userId, eventId) {
   const { data: student } = await supabase
     .from("students")
@@ -184,19 +176,15 @@ async function handleQuery(event, text, userId, eventId) {
     msg += `${i + 1}. ${r.violation_date} +${r.points}點 ${r.reason}\n`;
   });
 
-  if (records.length > 10) {
-    msg += `\n...還有 ${records.length - 10} 筆紀錄`;
-  }
+  if (records.length > 10) msg += `\n...還有 ${records.length - 10} 筆紀錄`;
 
   await replyText(event.replyToken, msg.trim());
   await saveLineEvent(event, text, eventId);
 }
 
-// ========== 記點功能（合併為一個，加入權限檢查） ==========
 async function handleRecord(event, text, eventId) {
   const senderId = event.source?.userId;
 
-  // ===== 管理員權限檢查 =====
   const { data: sender } = await supabase
     .from("students")
     .select("role")
@@ -208,14 +196,12 @@ async function handleRecord(event, text, eventId) {
     await saveLineEvent(event, text, eventId);
     return;
   }
-  // ========================
 
   const mentionees = event.message.mention?.mentionees || [];
   let student = null;
   let parsed = null;
 
   if (mentionees.length > 0) {
-    // 模式 A: @某人 記點
     const targetUserId = mentionees[0].userId;
     const mentionText = event.message.mention.mentionees[0].text || "";
     const remainingText = text.replace(mentionText, "").trim();
@@ -248,7 +234,6 @@ async function handleRecord(event, text, eventId) {
     student = foundStudent;
 
   } else {
-    // 模式 B: 寢室-床號 記點
     parsed = parseRecordCommand(text);
     if (!parsed.ok) {
       await replyText(event.replyToken, parsed.message);
@@ -298,13 +283,28 @@ async function handleRecord(event, text, eventId) {
   }
 
   await saveLineEvent(event, text, eventId);
+
+  // ===== 自動提醒：檢查累計點數 =====
+  const WARNING_THRESHOLD = 5;
+  const { data: allRecords } = await supabase
+    .from("violation_records")
+    .select("points")
+    .eq("student_id", student.id);
+
+  const totalPoints = allRecords?.reduce((sum, r) => sum + r.points, 0) || 0;
+
+  if (totalPoints >= WARNING_THRESHOLD) {
+    let warningMsg = `⚠️ 提醒\n${student.room}-${student.bed} ${student.name}\n累計已達 ${totalPoints} 點\n請注意生活常規！`;
+    await replyText(event.replyToken, warningMsg);
+  }
+  // =================================
+
   await replyText(
     event.replyToken,
     `✅ 已登記成功\n${bedCode} ${student.name}\n+${points} 點\n原因：${reason}`
   );
 }
 
-// ========== 解析函數 ==========
 function parseRecordCommand(text) {
   const match = text.match(/^記點\s+(\d+)-(\d+)\s+(\d+)\s+(.+)$/);
   if (!match) {
@@ -355,7 +355,6 @@ function parsePointsAndReason(text) {
   return { ok: true, data: { points, reason } };
 }
 
-// ========== 工具函數 ==========
 async function isDuplicateEvent(eventId) {
   const { data } = await supabase
     .from("line_events")
