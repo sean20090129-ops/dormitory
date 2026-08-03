@@ -37,35 +37,35 @@ async function processLineEvent(event) {
 
   // ========== 指令分流 ==========
   if (text === "我是誰") {
-  await replyText(event.replyToken, `你的 LINE ID：\n${userId}\n\n請把這串 ID 給管理員設定。`);
-  await saveLineEvent(event, text, eventId);
-  return;
-}
-  
-  if (text.startsWith("綁定 ")) {
+    await replyText(event.replyToken, `你的 LINE ID：\n${userId}\n\n請把這串 ID 給管理員設定。`);
+    await saveLineEvent(event, text, eventId);
+    return;
+  }
+
+  if (text.startsWith("綁定")) {
     await handleBind(event, text, userId, eventId);
     return;
   }
 
   if (text === "解除綁定") {
-    await handleUnbind(event, userId, eventId);
+    await handleUnbind(event, text, userId, eventId);
     return;
   }
 
   if (text === "查詢" || text === "我的記點") {
-    await handleQuery(event, userId, eventId);
+    await handleQuery(event, text, userId, eventId);
     return;
   }
 
-  if (text.startsWith("記點 ")) {
+  if (text.startsWith("記點")) {
     await handleRecord(event, text, eventId);
     return;
   }
 }
 
-// ========== 綁定功能 ==========
+// ========== 綁定功能（空格可選） ==========
 async function handleBind(event, text, userId, eventId) {
-  const match = text.match(/^綁定\s+(\d+)-(\d+)$/);
+  const match = text.match(/^綁定\s*(\d+)-(\d+)$/);
   if (!match) {
     await replyText(event.replyToken, "格式錯誤\n請輸入：綁定 寢室-床號\n例如：綁定 211-1");
     await saveLineEvent(event, text, eventId);
@@ -74,7 +74,6 @@ async function handleBind(event, text, userId, eventId) {
 
   const [, room, bed] = match;
 
-  // 檢查目標床位是否存在
   const { data: targetStudent, error } = await supabase
     .from("students")
     .select("id,name,room,bed,line_user_id")
@@ -94,14 +93,12 @@ async function handleBind(event, text, userId, eventId) {
     return;
   }
 
-  // 檢查這個 LINE 帳號是否已綁定其他人
   const { data: oldBind } = await supabase
     .from("students")
     .select("id,name,room,bed")
     .eq("line_user_id", userId)
     .maybeSingle();
 
-  // 如果這個 LINE 帳號已綁定別人，先解除
   if (oldBind && oldBind.id !== targetStudent.id) {
     await supabase
       .from("students")
@@ -109,14 +106,12 @@ async function handleBind(event, text, userId, eventId) {
       .eq("id", oldBind.id);
   }
 
-  // 檢查目標床位是否已被「別人」綁定
   if (targetStudent.line_user_id && targetStudent.line_user_id !== userId) {
     await replyText(event.replyToken, `⚠️ ${room}-${bed} 已被其他 LINE 帳號綁定。\n如需換綁，請聯繫管理員。`);
     await saveLineEvent(event, text, eventId);
     return;
   }
 
-  // 綁定到新床位（或重新綁定同一人）
   const { error: updateError } = await supabase
     .from("students")
     .update({ line_user_id: userId })
@@ -128,9 +123,7 @@ async function handleBind(event, text, userId, eventId) {
     return;
   }
 
-  // 回覆訊息
   let msg = `✅ 綁定成功！\n${room}-${bed} ${targetStudent.name}\n現在管理員可以 @你 來記點了。`;
-  
   if (oldBind && oldBind.id !== targetStudent.id) {
     msg = `✅ 已從 ${oldBind.room}-${oldBind.bed} 換到 ${room}-${bed}\n${targetStudent.name}\n管理員 @你 會記到新的床位。`;
   }
@@ -139,8 +132,8 @@ async function handleBind(event, text, userId, eventId) {
   await saveLineEvent(event, text, eventId);
 }
 
-// ========== 解除綁定 ==========
-async function handleUnbind(event, userId, eventId) {
+// ========== 解除綁定（修正：加入 text 參數） ==========
+async function handleUnbind(event, text, userId, eventId) {
   const { data: student } = await supabase
     .from("students")
     .select("id,name,room,bed")
@@ -158,8 +151,8 @@ async function handleUnbind(event, userId, eventId) {
   await saveLineEvent(event, text, eventId);
 }
 
-// ========== 查詢自己的記點 ==========
-async function handleQuery(event, userId, eventId) {
+// ========== 查詢記點（修正：加入 text 參數） ==========
+async function handleQuery(event, text, userId, eventId) {
   const { data: student } = await supabase
     .from("students")
     .select("id,name,room,bed")
@@ -199,35 +192,30 @@ async function handleQuery(event, userId, eventId) {
   await saveLineEvent(event, text, eventId);
 }
 
-// ========== 記點功能（支援 @記點 和 寢室-床號） ==========
-
+// ========== 記點功能（合併為一個，加入權限檢查） ==========
 async function handleRecord(event, text, eventId) {
   const senderId = event.source?.userId;
-  
-  // ===== 新增：管理員權限檢查 =====
+
+  // ===== 管理員權限檢查 =====
   const { data: sender } = await supabase
     .from("students")
     .select("role")
     .eq("line_user_id", senderId)
     .maybeSingle();
-  
+
   if (!sender || sender.role !== 'admin') {
     await replyText(event.replyToken, "⚠️ 只有管理員可以記點。");
     await saveLineEvent(event, text, eventId);
     return;
   }
-  // ================================
-  
-  const mentionees = event.message.mention?.mentionees || [];
-  // ... 後面完全不用改
-}
-async function handleRecord(event, text, eventId) {
+  // ========================
+
   const mentionees = event.message.mention?.mentionees || [];
   let student = null;
   let parsed = null;
 
   if (mentionees.length > 0) {
-    // 模式 A: @某人 記點 → 用 line_user_id 找人（跟著人走！）
+    // 模式 A: @某人 記點
     const targetUserId = mentionees[0].userId;
     const mentionText = event.message.mention.mentionees[0].text || "";
     const remainingText = text.replace(mentionText, "").trim();
@@ -344,7 +332,7 @@ function parseRecordCommand(text) {
 function parsePointsAndReason(text) {
   const clean = text.replace(/^記點\s*/, "").trim();
   const match = clean.match(/^(\d+)\s+(.+)$/);
-  
+
   if (!match) {
     return {
       ok: false,
