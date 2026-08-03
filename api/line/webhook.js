@@ -195,6 +195,27 @@ async function handleQuery(event, userId, eventId) {
 }
 
 // ========== 記點功能（支援 @記點 和 寢室-床號） ==========
+
+async function handleRecord(event, text, eventId) {
+  const senderId = event.source?.userId;
+  
+  // ===== 新增：管理員權限檢查 =====
+  const { data: sender } = await supabase
+    .from("students")
+    .select("role")
+    .eq("line_user_id", senderId)
+    .maybeSingle();
+  
+  if (!sender || sender.role !== 'admin') {
+    await replyText(event.replyToken, "⚠️ 只有管理員可以記點。");
+    await saveLineEvent(event, text, eventId);
+    return;
+  }
+  // ================================
+  
+  const mentionees = event.message.mention?.mentionees || [];
+  // ... 後面完全不用改
+}
 async function handleRecord(event, text, eventId) {
   const mentionees = event.message.mention?.mentionees || [];
   let student = null;
