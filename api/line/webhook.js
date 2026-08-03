@@ -285,7 +285,7 @@ async function handleRecord(event, text, eventId) {
   await saveLineEvent(event, text, eventId);
 
   // ===== 自動提醒：檢查累計點數 =====
-  const WARNING_THRESHOLD = 5;
+  const WARNING_THRESHOLD = 15;
   const { data: allRecords } = await supabase
     .from("violation_records")
     .select("points")
