@@ -494,34 +494,87 @@
       }
     }
 
-    function renderStudentRecords(records) {
-      const container = document.getElementById('studentRecordsList');
-      if (!records.length) {
-        container.innerHTML = '<div class="text-sm text-gray-400 text-center py-4">暫無記點紀錄 👍</div>';
-        return;
-      }
+   function renderStudentRecords(records) {
+  const container = document.getElementById('studentRecordsList');
+  if (!records.length) {
+    container.innerHTML = '<div class="text-sm text-gray-400 text-center py-4">暫無記點紀錄 👍</div>';
+    return;
+  }
 
-      const totalPoints = records.reduce((sum, r) => sum + (r.points || 0), 0);
+  const totalPoints = records.reduce((sum, r) => sum + (r.points || 0), 0);
 
-      container.innerHTML = `
-        <div class="bg-red-50 border border-red-100 rounded-lg p-2 mb-3 text-center">
-          <span class="text-xs text-red-600 font-medium">累計記點</span>
-          <div class="text-xl font-bold text-red-600">${totalPoints} 點</div>
-          <div class="text-xs text-gray-500">共 ${records.length} 筆紀錄</div>
-        </div>
-        ${records.map(r => `
-          <div class="bg-gray-50 rounded-lg p-3 text-sm border border-gray-100">
-            <div class="flex justify-between items-start">
-              <span class="text-gray-500 text-xs">${r.violation_date}</span>
-              <span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded text-xs">+${r.points}</span>
-            </div>
-            <div class="text-gray-700 mt-1 font-medium">${r.reason}</div>
-            <div class="text-gray-400 text-xs mt-1">記錄者：${r.created_by?.slice(0, 10) || 'line'}...</div>
+  container.innerHTML = `
+    <div class="bg-red-50 border border-red-100 rounded-lg p-2 mb-3 text-center">
+      <span class="text-xs text-red-600 font-medium">累計記點</span>
+      <div class="text-xl font-bold text-red-600">${totalPoints} 點</div>
+      <div class="text-xs text-gray-500">共 ${records.length} 筆紀錄</div>
+    </div>
+    ${records.map(r => `
+      <div class="bg-gray-50 rounded-lg p-3 text-sm border border-gray-100 group hover:border-emerald-300 transition">
+        <div class="flex justify-between items-start">
+          <span class="text-gray-500 text-xs">${r.violation_date}</span>
+          <div class="flex items-center gap-2">
+            <span class="text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded text-xs">+${r.points}</span>
+            <button onclick="cancelRecord('${r.id}', '${r.violation_date}', ${r.points})" 
+              class="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition border border-emerald-200" 
+              title="消點（刪除這筆紀錄）">
+              ✕ 消點
+            </button>
           </div>
-        `).join('')}
-      `;
-    }
+        </div>
+        <div class="text-gray-700 mt-1 font-medium">${r.reason}</div>
+        <div class="text-gray-400 text-xs mt-1">記錄者：${r.created_by?.slice(0, 10) || 'line'}...</div>
+      </div>
+    `).join('')}
+  `;
+}
 
+async function cancelRecord(recordId, date, points) {
+  if (!confirm(`確定要消點嗎？\n\n將刪除這筆紀錄：\n日期：${date}\n點數：+${points}\n\n此操作無法復原！`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/records`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: recordId })
+    });
+    if (!res.ok) throw new Error('消點失敗');
+
+    showToast('✅ 已消點');
+    if (currentDetailStudentId) {
+      loadStudentRecords(currentDetailStudentId);
+    }
+    loadStats();
+    if (currentTab === 'records') loadRecords();
+    if (currentTab === 'ranking') loadRanking();
+  } catch (e) {
+    showToast('❌ 消點失敗：' + e.message);
+  }
+}
+    async function cancelRecord(recordId, date, points) {
+  if (!confirm(`確定要消點嗎？\n\n將刪除這筆紀錄：\n日期：${date}\n點數：+${points}\n\n此操作無法復原！`)) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/records`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: recordId })
+    });
+    if (!res.ok) throw new Error('消點失敗');
+
+    showToast('✅ 已消點');
+    // 重新載入該學生的記點紀錄
+    if (currentDetailStudentId) {
+      loadStudentRecords(currentDetailStudentId);
+    }
+    // 同步更新統計和排行榜
+    loadStats();
+    if (currentTab === 'records') loadRecords();
+    if (currentTab === 'ranking') loadRanking();
+  } catch (e) {
+    showToast('❌ 消點失敗：' + e.message);
+  }
+}
     async function submitEditStudent(e) {
       e.preventDefault();
       const form = e.target;
