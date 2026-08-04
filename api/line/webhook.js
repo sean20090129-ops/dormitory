@@ -198,7 +198,7 @@ async function handleQuery(event, text, userId, eventId) {
   await saveLineEvent(event, text, eventId);
 }
 
-// ========== 記點 / 消點 功能（合併） ==========
+// ========== 記點 / 消點 功能 ==========
 async function handleRecord(event, text, eventId, isDeduct) {
   const senderId = event.source?.userId;
   const actionName = isDeduct ? "消點" : "記點";
@@ -223,12 +223,8 @@ async function handleRecord(event, text, eventId, isDeduct) {
   if (mentionees.length > 0) {
     // 模式 A: @某人 記點/消點
     const targetUserId = mentionees[0].userId;
-
-    // ===== 修正：使用 index + length 移除 @mention =====
     const mention = mentionees[0];
     const remainingText = (text.substring(0, mention.index) + text.substring(mention.index + mention.length)).trim();
-    // ================================================
-
     parsed = parsePointsAndReason(remainingText, isDeduct);
 
     if (!parsed.ok) {
@@ -290,7 +286,6 @@ async function handleRecord(event, text, eventId, isDeduct) {
   }
 
   const { points: inputPoints, reason } = parsed.data;
-  // 消點時把點數變負數
   const finalPoints = isDeduct ? -Math.abs(inputPoints) : Math.abs(inputPoints);
   const bedCode = `${student.room}-${student.bed}`;
 
@@ -319,11 +314,20 @@ async function handleRecord(event, text, eventId, isDeduct) {
   );
 }
 
-// ========== 解析函數 ==========
+// ========== 解析函數（修正版：更寬鬆） ==========
 function parseRecordCommand(text, isDeduct) {
   const prefix = isDeduct ? '消點' : '記點';
-  const regex = new RegExp(`^${prefix}\s+(\d+)-(\d+)\s+(\d+)\s+(.+)$`);
-  const match = text.match(regex);
+
+  // 移除 prefix，然後解析後面的內容
+  const prefixRegex = new RegExp(`^${prefix}\s*`);
+  const body = text.replace(prefixRegex, '').trim();
+
+  // 寬鬆匹配：寢室-床號 點數 原因
+  // [\-－] 支援半形和全形連字符
+  const match = body.match(/^(\d+)[\-－](\d+)\s+(\d+)\s+(.+)$/);
+
+  console.log('DEBUG parseRecordCommand:', { text, prefix, body, match: !!match });
+
   if (!match) {
     return {
       ok: false,
@@ -351,10 +355,12 @@ function parsePointsAndReason(text, isDeduct) {
   const clean = text.replace(new RegExp(`^${prefix}\s*`), "").trim();
   const match = clean.match(/^(\d+)\s+(.+)$/);
 
+  console.log('DEBUG parsePointsAndReason:', { text, clean, match: !!match });
+
   if (!match) {
     return {
       ok: false,
-      message: `格式錯誤\n@${prefix} 格式：${prefix} @某人 點數 原因\n例如：${prefix} @王小明 1 拖鞋未收`
+      message: `格式錯誤\n@${isDeduct ? '消點' : '記點'} 格式：${prefix} @某人 點數 原因\n例如：${prefix} @王小明 1 拖鞋未收`
     };
   }
 
