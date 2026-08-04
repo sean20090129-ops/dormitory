@@ -8,33 +8,41 @@ const supabase = createClient(
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
-    let query = supabase
-      .from("violation_records")
-      .select(`
-        id,
-        student_id,
-        violation_date,
-        points,
-        reason,
-        created_by,
-        students:student_id (name, room, bed)
-      `)
-      .order("violation_date", { ascending: false });
+    if (req.method === "GET") {
+      const { data, error } = await supabase
+        .from("violation_records")
+        .select(`
+          id,
+          student_id,
+          violation_date,
+          points,
+          reason,
+          created_by,
+          students:student_id (name, room, bed)
+        `)
+        .order("violation_date", { ascending: false });
 
-    // 如果帶了 student_id，只查該學生的記點
-    const studentId = req.query?.student_id;
-    if (studentId) {
-      query = query.eq("student_id", studentId);
+      if (error) throw error;
+      res.status(200).json({ data });
+      return;
     }
 
-    const { data, error } = await query;
+    if (req.method === "POST") {
+      const { data, error } = await supabase
+        .from("violation_records")
+        .insert(req.body)
+        .select();
+      if (error) throw error;
+      res.status(200).json({ data });
+      return;
+    }
 
-    if (error) throw error;
-    res.status(200).json({ data });
+    res.status(405).json({ error: "Method not allowed" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
