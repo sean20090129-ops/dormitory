@@ -1,3 +1,4 @@
+// api/line/webhook.js
 import crypto from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
@@ -34,6 +35,7 @@ async function processLineEvent(event) {
 
   if (eventId && (await isDuplicateEvent(eventId))) return;
 
+  // ========== 指令分流 ==========
   if (text === "我是誰") {
     await replyText(event.replyToken, `你的 LINE ID：\n${userId}\n\n請把這串 ID 給管理員設定。`);
     await saveLineEvent(event, text, eventId);
@@ -56,11 +58,17 @@ async function processLineEvent(event) {
   }
 
   if (text.startsWith("記點")) {
-    await handleRecord(event, text, eventId);
+    await handleRecord(event, text, eventId, false);
+    return;
+  }
+
+  if (text.startsWith("消點")) {
+    await handleRecord(event, text, eventId, true);
     return;
   }
 }
 
+// ========== 綁定功能（空格可選） ==========
 async function handleBind(event, text, userId, eventId) {
   const match = text.match(/^綁定\s*(\d+)-(\d+)$/);
   if (!match) {
@@ -97,7 +105,10 @@ async function handleBind(event, text, userId, eventId) {
     .maybeSingle();
 
   if (oldBind && oldBind.id !== targetStudent.id) {
-    await supabase.from("students").update({ line_user_id: null }).eq("id", oldBind.id);
+    await supabase
+      .from("students")
+      .update({ line_user_id: null })
+      .eq("id", oldBind.id);
   }
 
   if (targetStudent.line_user_id && targetStudent.line_user_id !== userId) {
@@ -126,6 +137,7 @@ async function handleBind(event, text, userId, eventId) {
   await saveLineEvent(event, text, eventId);
 }
 
+// ========== 解除綁定 ==========
 async function handleUnbind(event, text, userId, eventId) {
   const { data: student } = await supabase
     .from("students")
@@ -144,6 +156,7 @@ async function handleUnbind(event, text, userId, eventId) {
   await saveLineEvent(event, text, eventId);
 }
 
+// ========== 查詢記點 ==========
 async function handleQuery(event, text, userId, eventId) {
   const { data: student } = await supabase
     .from("students")
@@ -173,18 +186,24 @@ async function handleQuery(event, text, userId, eventId) {
 
   let msg = `📋 ${student.room}-${student.bed} ${student.name}\n累計：${totalPoints} 點\n\n`;
   records.slice(0, 10).forEach((r, i) => {
-    msg += `${i + 1}. ${r.violation_date} +${r.points}點 ${r.reason}\n`;
+    const sign = r.points > 0 ? '+' : '';
+    msg += `${i + 1}. ${r.violation_date} ${sign}${r.points}點 ${r.reason}\n`;
   });
 
-  if (records.length > 10) msg += `\n...還有 ${records.length - 10} 筆紀錄`;
+  if (records.length > 10) {
+    msg += `\n...還有 ${records.length - 10} 筆紀錄`;
+  }
 
   await replyText(event.replyToken, msg.trim());
   await saveLineEvent(event, text, eventId);
 }
 
-async function handleRecord(event, text, eventId) {
+// ========== 記點 / 消點 功能（合併） ==========
+async function handleRecord(event, text, eventId, isDeduct) {
   const senderId = event.source?.userId;
+  const actionName = isDeduct ? "消點" : "記點";
 
+  // ===== 管理員權限檢查 =====
   const { data: sender } = await supabase
     .from("students")
     .select("role")
@@ -192,7 +211,7 @@ async function handleRecord(event, text, eventId) {
     .maybeSingle();
 
   if (!sender || sender.role !== 'admin') {
-    await replyText(event.replyToken, "⚠️ 只有管理員可以記點。");
+    await replyText(event.replyToken, `⚠️ 只有管理員可以${actionName}。`);
     await saveLineEvent(event, text, eventId);
     return;
   }
@@ -202,10 +221,15 @@ async function handleRecord(event, text, eventId) {
   let parsed = null;
 
   if (mentionees.length > 0) {
+    // 模式 A: @某人 記點/消點
     const targetUserId = mentionees[0].userId;
-    const mentionText = event.message.mention.mentionees[0].text || "";
-    const remainingText = text.replace(mentionText, "").trim();
-    parsed = parsePointsAndReason(remainingText);
+
+    // ===== 修正：使用 index + length 移除 @mention =====
+    const mention = mentionees[0];
+    const remainingText = (text.substring(0, mention.index) + text.substring(mention.index + mention.length)).trim();
+    // ================================================
+
+    parsed = parsePointsAndReason(remainingText, isDeduct);
 
     if (!parsed.ok) {
       await replyText(event.replyToken, parsed.message);
@@ -234,7 +258,8 @@ async function handleRecord(event, text, eventId) {
     student = foundStudent;
 
   } else {
-    parsed = parseRecordCommand(text);
+    // 模式 B: 寢室-床號 記點/消點
+    parsed = parseRecordCommand(text, isDeduct);
     if (!parsed.ok) {
       await replyText(event.replyToken, parsed.message);
       await saveLineEvent(event, text, eventId);
@@ -264,53 +289,45 @@ async function handleRecord(event, text, eventId) {
     student = foundStudent;
   }
 
-  const { points, reason } = parsed.data;
+  const { points: inputPoints, reason } = parsed.data;
+  // 消點時把點數變負數
+  const finalPoints = isDeduct ? -Math.abs(inputPoints) : Math.abs(inputPoints);
   const bedCode = `${student.room}-${student.bed}`;
 
   const { error: insertError } = await supabase.from("violation_records").insert({
     student_id: student.id,
     violation_date: new Date().toISOString().slice(0, 10),
-    reason,
-    points,
+    reason: isDeduct ? `消點 - ${reason}` : reason,
+    points: finalPoints,
     excluded_from_totals: false,
     created_by: event.source?.userId || "line"
   });
 
   if (insertError) {
-    await replyText(event.replyToken, "新增記點失敗，請稍後再試。");
+    await replyText(event.replyToken, `${actionName}失敗，請稍後再試。`);
     await saveLineEvent(event, text, eventId);
     return;
   }
 
   await saveLineEvent(event, text, eventId);
 
-  // ===== 自動提醒：檢查累計點數 =====
-  const WARNING_THRESHOLD = 15;
-  const { data: allRecords } = await supabase
-    .from("violation_records")
-    .select("points")
-    .eq("student_id", student.id);
-
-  const totalPoints = allRecords?.reduce((sum, r) => sum + r.points, 0) || 0;
-
-  if (totalPoints >= WARNING_THRESHOLD) {
-    let warningMsg = `⚠️ 提醒\n${student.room}-${student.bed} ${student.name}\n累計已達 ${totalPoints} 點\n請注意生活常規！`;
-    await replyText(event.replyToken, warningMsg);
-  }
-  // =================================
-
+  const sign = finalPoints > 0 ? '+' : '';
+  const actionEmoji = isDeduct ? '✅ 已消點' : '✅ 已登記成功';
   await replyText(
     event.replyToken,
-    `✅ 已登記成功\n${bedCode} ${student.name}\n+${points} 點\n原因：${reason}`
+    `${actionEmoji}\n${bedCode} ${student.name}\n${sign}${finalPoints} 點\n原因：${reason}`
   );
 }
 
-function parseRecordCommand(text) {
-  const match = text.match(/^記點\s+(\d+)-(\d+)\s+(\d+)\s+(.+)$/);
+// ========== 解析函數 ==========
+function parseRecordCommand(text, isDeduct) {
+  const prefix = isDeduct ? '消點' : '記點';
+  const regex = new RegExp(`^${prefix}\s+(\d+)-(\d+)\s+(\d+)\s+(.+)$`);
+  const match = text.match(regex);
   if (!match) {
     return {
       ok: false,
-      message: "格式錯誤\n請輸入：記點 寢室-床號 點數 原因\n例如：記點 211-1 1 拖鞋未收"
+      message: `格式錯誤\n請輸入：${prefix} 寢室-床號 點數 原因\n例如：${prefix} 211-1 1 拖鞋未收`
     };
   }
 
@@ -323,20 +340,21 @@ function parseRecordCommand(text) {
   }
 
   if (!reason) {
-    return { ok: false, message: "請輸入違規原因。" };
+    return { ok: false, message: "請輸入原因。" };
   }
 
   return { ok: true, data: { room, bed, points, reason } };
 }
 
-function parsePointsAndReason(text) {
-  const clean = text.replace(/^記點\s*/, "").trim();
+function parsePointsAndReason(text, isDeduct) {
+  const prefix = isDeduct ? '消點' : '記點';
+  const clean = text.replace(new RegExp(`^${prefix}\s*`), "").trim();
   const match = clean.match(/^(\d+)\s+(.+)$/);
 
   if (!match) {
     return {
       ok: false,
-      message: "格式錯誤\n@記點 格式：記點 @某人 點數 原因\n例如：記點 @王小明 1 拖鞋未收"
+      message: `格式錯誤\n@${prefix} 格式：${prefix} @某人 點數 原因\n例如：${prefix} @王小明 1 拖鞋未收`
     };
   }
 
@@ -349,12 +367,13 @@ function parsePointsAndReason(text) {
   }
 
   if (!reason) {
-    return { ok: false, message: "請輸入違規原因。" };
+    return { ok: false, message: "請輸入原因。" };
   }
 
   return { ok: true, data: { points, reason } };
 }
 
+// ========== 工具函數 ==========
 async function isDuplicateEvent(eventId) {
   const { data } = await supabase
     .from("line_events")
