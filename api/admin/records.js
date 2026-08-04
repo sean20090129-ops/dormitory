@@ -8,12 +8,12 @@ const supabase = createClient(
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
 
   if (req.method === "OPTIONS") return res.status(200).end();
 
   try {
-    // ===== GET：查詢記點紀錄（支援全部或按 student_id 篩選）=====
+    // ===== GET：查詢記點紀錄 =====
     if (req.method === "GET") {
       const { student_id } = req.query;
       let query = supabase
@@ -37,7 +37,27 @@ export default async function handler(req, res) {
       return res.status(200).json({ data });
     }
 
-    // ===== DELETE：消點（刪除單筆記點紀錄）=====
+    // ===== POST：新增消點紀錄（points 為負數）=====
+    if (req.method === "POST") {
+      const { student_id, points, reason } = req.body;
+      if (!student_id || !points || !reason) {
+        return res.status(400).json({ error: "缺少必要欄位" });
+      }
+
+      const { data, error } = await supabase.from("violation_records").insert({
+        student_id,
+        violation_date: new Date().toISOString().slice(0, 10),
+        reason: `【消點】${reason}`,
+        points: -Math.abs(Number(points)), // 強制轉為負數
+        excluded_from_totals: false,
+        created_by: "admin_web"
+      }).select();
+
+      if (error) throw error;
+      return res.status(200).json({ data });
+    }
+
+    // ===== DELETE：刪除單筆紀錄 =====
     if (req.method === "DELETE") {
       const { id } = req.body;
       if (!id) return res.status(400).json({ error: "缺少 id" });
