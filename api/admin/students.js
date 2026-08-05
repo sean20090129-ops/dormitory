@@ -34,7 +34,13 @@ export default async function handler(req, res) {
 
     if (req.method === "DELETE") {
       const { id } = req.body;
+  
+  // 先刪他的記點紀錄
+      await supabase.from("violation_records").delete().eq("student_id", id);
+  
+  // 再刪學生資料
       const { error } = await supabase.from("students").delete().eq("id", id);
+  
       if (error) throw error;
       return res.status(200).json({ success: true });
     }
