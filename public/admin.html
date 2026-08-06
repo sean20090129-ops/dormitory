@@ -167,8 +167,8 @@
           <p class="text-xs text-red-500 mt-1 hidden" id="addNameError">請輸入姓名</p>
         </div>
         <div>
-          <label for="addStudentNumber" class="block text-sm font-medium text-gray-700 mb-1">學號 <span class="text-red-500">*</span></label>
-          <input type="text" id="addStudentNumber" name="student_number" required maxlength="20" pattern="[A-Za-z0-9_-]+" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="請輸入學號">
+          <label for="addStudentNumber" class="block text-sm font-medium text-gray-700 mb-1">學號（選填，留空則自動生成）</label>
+          <input type="text" id="addStudentNumber" name="student_number" maxlength="20" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="請輸入學號">
           <p class="text-xs text-gray-400 mt-1">限英數字、底線、連字號</p>
         </div>
         <div class="grid grid-cols-2 gap-4">
@@ -811,9 +811,13 @@
         return;
       }
       document.getElementById('addNameError').classList.add('hidden');
+      let finalStudentNumber = studentNumber;
+      if (!finalStudentNumber) {
+        finalStudentNumber = `AUTO_${Date.now()}`;
+      }
       const data = {
         name: name,
-        student_number: studentNumber,
+        student_number: finalStudentNumber,
         room: form.room.value.trim(),
         bed: form.bed.value.trim(),
         class_name: form.class_name.value.trim() || null,
@@ -830,7 +834,13 @@
         loadStudents();
         loadStats(true);
       } catch (e) {
-        showToast('❌ 新增失敗：' + e.message);
+        const msg = e.message || '';
+        if (msg.includes('duplicate key') && msg.includes('student_number')) {
+          showToast('❌ 新增失敗：該學號已存在');
+          document.getElementById('addStudentNumber').focus();
+        } else {
+          showToast('❌ 新增失敗：' + e.message);
+        }
       } finally {
         setButtonLoading('addSubmitBtn', false, '新增');
       }
@@ -896,11 +906,17 @@
 
       pasteImportData = [];
       const errors = [];
+      const now = Date.now();
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(delimiter).map(v => v.trim());
+        let studentNumber = headerMap.student_number !== undefined ? (values[headerMap.student_number] || '') : '';
+        // 若沒有學號，自動生成唯一識別碼（避免資料庫 UNIQUE 衝突）
+        if (!studentNumber) {
+          studentNumber = `AUTO_${now}_${String(i).padStart(3, '0')}`;
+        }
         const row = {
           name: values[headerMap.name] || '',
-          student_number: headerMap.student_number !== undefined ? (values[headerMap.student_number] || '') : '',
+          student_number: studentNumber,
           room: values[headerMap.room] || '',
           bed: values[headerMap.bed] || '',
           class_name: headerMap.class_name !== undefined ? (values[headerMap.class_name] || null) : null,
@@ -919,6 +935,25 @@
         return;
       }
 
+      // 檢查匯入資料內部是否有重複學號
+      const seenNumbers = new Map();
+      const dupes = [];
+      pasteImportData.forEach((row, idx) => {
+        if (row.student_number) {
+          if (seenNumbers.has(row.student_number)) {
+            dupes.push(`第 ${seenNumbers.get(row.student_number) + 1} 行與第 ${idx + 1} 行學號重複：${row.student_number}`);
+          } else {
+            seenNumbers.set(row.student_number, idx);
+          }
+        }
+      });
+      if (dupes.length > 0) {
+        errorDiv.innerHTML = '❌ 匯入資料中發現重複學號：<br>' + dupes.slice(0, 5).join('<br>') + (dupes.length > 5 ? '<br>...還有更多' : '');
+        errorDiv.classList.remove('hidden');
+        submitBtn.disabled = true;
+        return;
+      }
+
       if (errors.length > 0 && errors.length <= 3) {
         errorDiv.innerHTML = '⚠️ ' + errors.join('<br>');
         errorDiv.classList.remove('hidden');
@@ -930,7 +965,7 @@
       document.getElementById('pastePreviewBody').innerHTML = preview.map(row => `
         <tr class="border-b border-gray-100">
           <td class="px-3 py-2 text-gray-700">${escapeHTML(row.name)}</td>
-          <td class="px-3 py-2 text-gray-600">${escapeHTML(row.student_number || '-')}</td>
+          <td class="px-3 py-2 text-gray-600">${row.student_number && row.student_number.startsWith('AUTO_') ? '<span class="text-orange-500 text-xs">自動生成</span>' : escapeHTML(row.student_number || '-')}</td>
           <td class="px-3 py-2 text-gray-600">${escapeHTML(row.room)}</td>
           <td class="px-3 py-2 text-gray-600">${escapeHTML(row.bed)}</td>
           <td class="px-3 py-2 text-gray-600">${escapeHTML(row.class_name || '-')}</td>
@@ -944,9 +979,11 @@
     async function submitPasteImport() {
       if (!pasteImportData.length) return;
       const btn = document.getElementById('pasteSubmitBtn');
+      const errorDiv = document.getElementById('pasteError');
       btn.disabled = true;
       const originalText = btn.textContent;
       btn.textContent = '匯入中...';
+      errorDiv.classList.add('hidden');
       try {
         await apiRequest(`${API_BASE}/api/admin/students`, {
           method: 'POST',
@@ -957,7 +994,27 @@
         loadStudents();
         loadStats(true);
       } catch (e) {
-        showToast('❌ 匯入失敗：' + e.message);
+        const msg = e.message || '';
+        // 解析 PostgreSQL 重複學號錯誤
+        if (msg.includes('duplicate key') && msg.includes('student_number')) {
+          const match = msg.match(/\(([^)]+)\)/);
+          const dupValue = match ? match[1] : '';
+          errorDiv.innerHTML = `❌ 學號重複：「<b>${escapeHTML(dupValue)}</b>」已存在於資料庫中。<br><br>
+            請檢查：<br>
+            1. 該學號是否已經匯入過？<br>
+            2. Excel 中是否有重複的學號？<br>
+            3. 若為同一人，請使用「查看」→「編輯」修改現有資料。`;
+          errorDiv.classList.remove('hidden');
+          showToast('❌ 匯入失敗：學號重複');
+        } else if (msg.includes('duplicate key')) {
+          errorDiv.textContent = '❌ 匯入失敗：資料重複（可能是學號或姓名+寢室組合已存在）';
+          errorDiv.classList.remove('hidden');
+          showToast('❌ 匯入失敗：資料重複');
+        } else {
+          errorDiv.textContent = '❌ 匯入失敗：' + msg;
+          errorDiv.classList.remove('hidden');
+          showToast('❌ 匯入失敗：' + msg);
+        }
         btn.disabled = false;
       } finally {
         btn.textContent = originalText;
