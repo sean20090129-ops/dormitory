@@ -13,61 +13,65 @@
     .tab-active { border-bottom: 3px solid #10b981; color: #10b981; font-weight: 700; }
     .tab-inactive { border-bottom: 3px solid transparent; color: #6b7280; }
     .tab-inactive:hover { color: #374151; }
+    .modal-enter { animation: modalIn 0.2s ease-out; }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .spinner { animation: spin 1s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    *:focus-visible { outline: 2px solid #10b981; outline-offset: 2px; }
   </style>
 <base target="_blank">
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-  <nav class="bg-emerald-600 text-white shadow-lg">
+  <nav class="bg-emerald-600 text-white shadow-lg" role="navigation" aria-label="主導覽">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
         <h1 class="text-xl font-bold">宿舍記點管理後台</h1>
       </div>
       <div class="text-sm opacity-90">管理員專用</div>
     </div>
   </nav>
 
-  <div class="max-w-7xl mx-auto px-4 py-6">
+  <main class="max-w-7xl mx-auto px-4 py-6">
 
-    <div id="statsSection" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <section id="statsSection" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" aria-label="統計資訊">
       <div class="bg-white rounded-xl shadow p-5 border-l-4 border-emerald-500">
         <div class="text-gray-500 text-sm">總學生數</div>
-        <div id="statStudents" class="text-3xl font-bold text-gray-800 mt-1">-</div>
+        <div id="statStudents" class="text-3xl font-bold text-gray-800 mt-1" aria-live="polite">-</div>
       </div>
       <div class="bg-white rounded-xl shadow p-5 border-l-4 border-blue-500">
         <div class="text-gray-500 text-sm">總記點筆數</div>
-        <div id="statRecords" class="text-3xl font-bold text-gray-800 mt-1">-</div>
+        <div id="statRecords" class="text-3xl font-bold text-gray-800 mt-1" aria-live="polite">-</div>
       </div>
       <div class="bg-white rounded-xl shadow p-5 border-l-4 border-orange-500">
         <div class="text-gray-500 text-sm">累計記點</div>
-        <div id="statPoints" class="text-3xl font-bold text-gray-800 mt-1">-</div>
+        <div id="statPoints" class="text-3xl font-bold text-gray-800 mt-1" aria-live="polite">-</div>
       </div>
       <div class="bg-white rounded-xl shadow p-5 border-l-4 border-red-500">
         <div class="text-gray-500 text-sm">今日記點</div>
-        <div id="statToday" class="text-3xl font-bold text-gray-800 mt-1">-</div>
+        <div id="statToday" class="text-3xl font-bold text-gray-800 mt-1" aria-live="polite">-</div>
       </div>
+    </section>
+
+    <div class="bg-white rounded-t-xl shadow border-b flex" role="tablist" aria-label="功能分頁">
+      <button onclick="switchTab('students')" id="tab-students" class="tab-active px-6 py-4 text-sm transition" role="tab" aria-selected="true" aria-controls="page-students">👥 學生管理</button>
+      <button onclick="switchTab('records')" id="tab-records" class="tab-inactive px-6 py-4 text-sm transition" role="tab" aria-selected="false" aria-controls="page-records">📝 記點紀錄</button>
+      <button onclick="switchTab('ranking')" id="tab-ranking" class="tab-inactive px-6 py-4 text-sm transition" role="tab" aria-selected="false" aria-controls="page-ranking">🏆 記點排行</button>
     </div>
 
-    <div class="bg-white rounded-t-xl shadow border-b flex">
-      <button onclick="switchTab('students')" id="tab-students" class="tab-active px-6 py-4 text-sm transition">👥 學生管理</button>
-      <button onclick="switchTab('records')" id="tab-records" class="tab-inactive px-6 py-4 text-sm transition">📝 記點紀錄</button>
-      <button onclick="switchTab('ranking')" id="tab-ranking" class="tab-inactive px-6 py-4 text-sm transition">🏆 記點排行</button>
-    </div>
-
-    <!-- 學生管理 -->
-    <div id="page-students" class="bg-white rounded-b-xl shadow p-6 fade-in">
+    <div id="page-students" class="bg-white rounded-b-xl shadow p-6 fade-in" role="tabpanel" aria-labelledby="tab-students">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h2 class="text-lg font-bold text-gray-800">學生列表</h2>
           <p class="text-sm text-gray-500">管理住宿生資料、設定管理員權限</p>
         </div>
         <div class="flex gap-2 flex-wrap">
-          <button onclick="openPasteModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+          <button onclick="openPasteModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 focus:ring-2 focus:ring-blue-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
             📋 貼上匯入
           </button>
-          <button onclick="openAddModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+          <button onclick="openAddModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 focus:ring-2 focus:ring-emerald-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             新增學生
           </button>
@@ -75,16 +79,19 @@
       </div>
 
       <div class="mb-4">
-        <input type="text" id="studentSearch" oninput="filterStudents()" placeholder="🔍 搜尋姓名、學號、寢室..." class="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm">
+        <label for="studentSearch" class="sr-only">搜尋學生</label>
+        <input type="text" id="studentSearch" oninput="debouncedFilterStudents()" placeholder="🔍 搜尋姓名、學號、寢室..." 
+          class="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
+          autocomplete="off">
       </div>
 
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="bg-gray-50 text-gray-600">
             <tr>
-              <th class="px-4 py-3 text-left font-medium">姓名</th>
-              <th class="px-4 py-3 text-left font-medium">學號</th>
-              <th class="px-4 py-3 text-left font-medium">寢室</th>
+              <th class="px-4 py-3 text-left font-medium cursor-pointer hover:bg-gray-100 select-none" onclick="sortStudents('name')">姓名 <span id="sort-name"></span></th>
+              <th class="px-4 py-3 text-left font-medium cursor-pointer hover:bg-gray-100 select-none" onclick="sortStudents('student_number')">學號 <span id="sort-student_number"></span></th>
+              <th class="px-4 py-3 text-left font-medium cursor-pointer hover:bg-gray-100 select-none" onclick="sortStudents('room')">寢室 <span id="sort-room"></span></th>
               <th class="px-4 py-3 text-left font-medium">床號</th>
               <th class="px-4 py-3 text-left font-medium">班級</th>
               <th class="px-4 py-3 text-left font-medium">身份</th>
@@ -97,16 +104,19 @@
           </tbody>
         </table>
       </div>
+      <div id="studentsEmptyState" class="hidden text-center py-8 text-gray-400">
+        <svg class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/></svg>
+        <p>沒有符合條件的學生資料</p>
+      </div>
     </div>
 
-    <!-- 記點紀錄 -->
-    <div id="page-records" class="bg-white rounded-b-xl shadow p-6 fade-in hidden">
+    <div id="page-records" class="bg-white rounded-b-xl shadow p-6 fade-in hidden" role="tabpanel" aria-labelledby="tab-records">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
         <div>
           <h2 class="text-lg font-bold text-gray-800">記點紀錄</h2>
           <p class="text-sm text-gray-500">查看所有違規記點紀錄</p>
         </div>
-        <button onclick="exportRecords()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+        <button onclick="exportRecords()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 focus:ring-2 focus:ring-blue-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           匯出報表 (CSV)
         </button>
@@ -130,8 +140,7 @@
       </div>
     </div>
 
-    <!-- 排行榜 -->
-    <div id="page-ranking" class="bg-white rounded-b-xl shadow p-6 fade-in hidden">
+    <div id="page-ranking" class="bg-white rounded-b-xl shadow p-6 fade-in hidden" role="tabpanel" aria-labelledby="tab-ranking">
       <div class="mb-6">
         <h2 class="text-lg font-bold text-gray-800">記點排行榜</h2>
         <p class="text-sm text-gray-500">累計記點最多的學生</p>
@@ -141,58 +150,58 @@
       </div>
     </div>
 
-  </div>
+  </main>
 
-  <!-- 新增學生 Modal -->
-  <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto">
+  <div id="addModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 p-6 max-h-[90vh] overflow-y-auto modal-enter">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-gray-800">新增學生</h3>
-        <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600">
+        <h3 id="addModalTitle" class="text-lg font-bold text-gray-800">新增學生</h3>
+        <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition" aria-label="關閉">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
-      <form id="addForm" onsubmit="submitAddStudent(event)" class="space-y-4">
+      <form id="addForm" onsubmit="submitAddStudent(event)" class="space-y-4" novalidate>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">姓名 *</label>
-          <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+          <label for="addName" class="block text-sm font-medium text-gray-700 mb-1">姓名 <span class="text-red-500">*</span></label>
+          <input type="text" id="addName" name="name" required maxlength="50" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="請輸入姓名">
+          <p class="text-xs text-red-500 mt-1 hidden" id="addNameError">請輸入姓名</p>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">學號 *</label>
-          <input type="text" name="student_number" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+          <label for="addStudentNumber" class="block text-sm font-medium text-gray-700 mb-1">學號 <span class="text-red-500">*</span></label>
+          <input type="text" id="addStudentNumber" name="student_number" required maxlength="20" pattern="[A-Za-z0-9_-]+" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="請輸入學號">
+          <p class="text-xs text-gray-400 mt-1">限英數字、底線、連字號</p>
         </div>
         <div class="grid grid-cols-2 gap-4">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">寢室 *</label>
-            <input type="text" name="room" required placeholder="例如：211" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            <label for="addRoom" class="block text-sm font-medium text-gray-700 mb-1">寢室 <span class="text-red-500">*</span></label>
+            <input type="text" id="addRoom" name="room" required maxlength="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="例如：211">
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">床號 *</label>
-            <input type="text" name="bed" required placeholder="例如：1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+            <label for="addBed" class="block text-sm font-medium text-gray-700 mb-1">床號 <span class="text-red-500">*</span></label>
+            <input type="text" id="addBed" name="bed" required maxlength="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="例如：1">
           </div>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">班級（選填）</label>
-          <input type="text" name="class_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none">
+          <label for="addClassName" class="block text-sm font-medium text-gray-700 mb-1">班級（選填）</label>
+          <input type="text" id="addClassName" name="class_name" maxlength="30" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="例如：一年級甲班">
         </div>
         <div class="flex items-center gap-2">
-          <input type="checkbox" name="is_admin" id="isAdminCheck" class="w-4 h-4 text-emerald-600 rounded">
+          <input type="checkbox" name="is_admin" id="isAdminCheck" class="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500">
           <label for="isAdminCheck" class="text-sm text-gray-700">設為管理員</label>
         </div>
         <div class="flex gap-3 pt-2">
           <button type="button" onclick="closeAddModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">取消</button>
-          <button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">新增</button>
+          <button type="submit" id="addSubmitBtn" class="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed">新增</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- 📋 貼上匯入 Modal（Excel 複製貼上） -->
-  <div id="pasteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+  <div id="pasteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="pasteModalTitle">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto modal-enter">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-gray-800">📋 從 Excel 貼上匯入</h3>
-        <button onclick="closePasteModal()" class="text-gray-400 hover:text-gray-600">
+        <h3 id="pasteModalTitle" class="text-lg font-bold text-gray-800">📋 從 Excel 貼上匯入</h3>
+        <button onclick="closePasteModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition" aria-label="關閉">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
@@ -211,7 +220,7 @@
       </div>
 
       <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 mb-2">
+        <label for="pasteInput" class="block text-sm font-medium text-gray-700 mb-2">
           貼上 Excel 複製的內容 <span class="text-red-500">*</span>
         </label>
         <textarea id="pasteInput" oninput="parsePastedData()" placeholder="在 Excel 複製後，直接貼到這裡...&#10;例如：&#10;姓名&#9;學號&#9;寢室&#9;床號&#9;班級&#10;王小明&#9;111001&#9;211&#9;1&#9;一年級&#10;李小華&#9;111002&#9;211&#9;2&#9;一年級" 
@@ -239,46 +248,44 @@
     </div>
   </div>
 
-  <!-- 學生詳情 Modal -->
-  <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" onclick="if(event.target===this)closeStudentDetail()">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+  <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle" onclick="if(event.target===this)closeStudentDetail()">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 p-6 max-h-[90vh] overflow-y-auto modal-enter">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="text-lg font-bold text-gray-800">學生詳情</h3>
-        <button onclick="closeStudentDetail()" class="text-gray-400 hover:text-gray-600">
+        <h3 id="detailModalTitle" class="text-lg font-bold text-gray-800">學生詳情</h3>
+        <button onclick="closeStudentDetail()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition" aria-label="關閉">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
 
       <div class="grid md:grid-cols-2 gap-6">
-        <!-- 左側：編輯資料 -->
         <div>
           <h4 class="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
             基本資料
           </h4>
-          <form id="editForm" onsubmit="submitEditStudent(event)" class="space-y-3">
+          <form id="editForm" onsubmit="submitEditStudent(event)" class="space-y-3" novalidate>
             <input type="hidden" name="id">
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">姓名 *</label>
-              <input type="text" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+              <input type="text" name="name" required maxlength="50" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">學號 *</label>
-              <input type="text" name="student_number" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+              <input type="text" name="student_number" required maxlength="20" pattern="[A-Za-z0-9_-]+" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
             </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">寢室 *</label>
-                <input type="text" name="room" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                <input type="text" name="room" required maxlength="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
               </div>
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">床號 *</label>
-                <input type="text" name="bed" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+                <input type="text" name="bed" required maxlength="10" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
               </div>
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">班級</label>
-              <input type="text" name="class_name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
+              <input type="text" name="class_name" maxlength="30" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-sm">
             </div>
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">身份</label>
@@ -288,25 +295,24 @@
               </select>
             </div>
             <div class="pt-2">
-              <button type="submit" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium">💾 儲存變更</button>
+              <button type="submit" id="editSubmitBtn" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">💾 儲存變更</button>
             </div>
           </form>
         </div>
 
-        <!-- 右側：消點 + 紀錄 -->
         <div>
-          <!-- 消點表單 -->
           <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
             <h4 class="text-sm font-bold text-emerald-800 mb-3 flex items-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
               消點
             </h4>
-            <form id="deductForm" onsubmit="submitDeduct(event)" class="space-y-2">
+            <form id="deductForm" onsubmit="submitDeduct(event)" class="space-y-2" novalidate>
               <input type="hidden" name="student_id">
               <div class="grid grid-cols-2 gap-2">
                 <div>
                   <label class="block text-xs text-gray-600 mb-1">消點數</label>
                   <input type="number" name="points" min="1" max="20" required placeholder="例如：2" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                  <p class="text-xs text-gray-400 mt-0.5">系統會自動轉為負數</p>
                 </div>
                 <div>
                   <label class="block text-xs text-gray-600 mb-1">目前累計</label>
@@ -315,9 +321,9 @@
               </div>
               <div>
                 <label class="block text-xs text-gray-600 mb-1">消點原因 *</label>
-                <input type="text" name="reason" required placeholder="例如：主動打掃、認錯態度良好..." class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                <input type="text" name="reason" required maxlength="200" placeholder="例如：主動打掃、認錯態度良好..." class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
               </div>
-              <button type="submit" class="w-full px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium">
+              <button type="submit" id="deductSubmitBtn" class="w-full px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                 ✓ 確認消點
               </button>
             </form>
@@ -335,8 +341,7 @@
     </div>
   </div>
 
-  <!-- Toast -->
-  <div id="toast" class="fixed bottom-6 right-6 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+  <div id="toast" class="fixed bottom-6 right-6 bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50" role="status" aria-live="polite">
     <span id="toastMsg"></span>
   </div>
 
@@ -346,144 +351,281 @@
     let currentTab = 'students';
     let currentDetailStudentId = null;
     let pasteImportData = [];
+    let cachedStats = null;
+    let sortField = null;
+    let sortAsc = true;
+    let debounceTimer = null;
 
     const API_BASE = window.location.origin;
+
+    function escapeHTML(str) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function debounce(fn, delay = 300) {
+      return function(...args) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    }
+
+    async function apiRequest(url, options = {}) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      try {
+        const res = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+          }
+        });
+        clearTimeout(timeoutId);
+        if (!res.ok) {
+          const errorText = await res.text().catch(() => '未知錯誤');
+          throw new Error(`HTTP ${res.status}: ${errorText}`);
+        }
+        return await res.json();
+      } catch (err) {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+          throw new Error('請求超時，請檢查網路連線');
+        }
+        throw err;
+      }
+    }
+
+    function setButtonLoading(btnId, loading, originalText) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      if (loading) {
+        btn.dataset.originalText = btn.textContent;
+        btn.innerHTML = `<svg class="w-4 h-4 spinner inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> 處理中...`;
+      } else {
+        btn.textContent = btn.dataset.originalText || originalText;
+      }
+    }
 
     function switchTab(tab) {
       currentTab = tab;
       ['students', 'records', 'ranking'].forEach(t => {
-        document.getElementById(`page-${t}`).classList.add('hidden');
+        const page = document.getElementById(`page-${t}`);
         const btn = document.getElementById(`tab-${t}`);
+        page.classList.add('hidden');
         btn.classList.remove('tab-active');
         btn.classList.add('tab-inactive');
+        btn.setAttribute('aria-selected', 'false');
       });
       document.getElementById(`page-${tab}`).classList.remove('hidden');
       const activeBtn = document.getElementById(`tab-${tab}`);
       activeBtn.classList.remove('tab-inactive');
       activeBtn.classList.add('tab-active');
+      activeBtn.setAttribute('aria-selected', 'true');
 
       if (tab === 'students') loadStudents();
       if (tab === 'records') loadRecords();
       if (tab === 'ranking') loadRanking();
     }
 
-    async function loadStats() {
+    async function loadStats(force = false) {
+      if (!force && cachedStats) {
+        renderStats(cachedStats);
+        return;
+      }
       try {
-        const res = await fetch(`${API_BASE}/api/admin/stats`);
-        const json = await res.json();
-        document.getElementById('statStudents').textContent = json.totalStudents;
-        document.getElementById('statRecords').textContent = json.totalRecords;
-        document.getElementById('statPoints').textContent = json.totalPoints;
-        document.getElementById('statToday').textContent = json.todayPoints;
-      } catch (e) { console.error('載入統計失敗', e); }
+        const json = await apiRequest(`${API_BASE}/api/admin/stats`);
+        cachedStats = json;
+        renderStats(json);
+      } catch (e) {
+        console.error('載入統計失敗', e);
+        showToast('❌ 載入統計失敗：' + e.message);
+      }
+    }
+
+    function renderStats(json) {
+      document.getElementById('statStudents').textContent = json.totalStudents ?? '-';
+      document.getElementById('statRecords').textContent = json.totalRecords ?? '-';
+      document.getElementById('statPoints').textContent = json.totalPoints ?? '-';
+      document.getElementById('statToday').textContent = json.todayPoints ?? '-';
     }
 
     async function loadStudents() {
+      const tbody = document.getElementById('studentsTableBody');
+      tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">載入中...</td></tr>';
       try {
-        const res = await fetch(`${API_BASE}/api/admin/students`);
-        const json = await res.json();
+        const json = await apiRequest(`${API_BASE}/api/admin/students`);
         allStudents = json.data || [];
         renderStudents(allStudents);
-      } catch (e) { showToast('載入學生資料失敗：' + e.message); }
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-red-400">載入失敗：${escapeHTML(e.message)}</td></tr>`;
+        showToast('❌ 載入學生資料失敗：' + e.message);
+      }
     }
 
     function renderStudents(students) {
       const tbody = document.getElementById('studentsTableBody');
+      const emptyState = document.getElementById('studentsEmptyState');
       if (!students.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="px-4 py-8 text-center text-gray-400">沒有學生資料</td></tr>';
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
         return;
       }
-      tbody.innerHTML = students.map(s => `
-        <tr class="hover:bg-gray-50 transition">
-          <td class="px-4 py-3 font-medium text-gray-800 cursor-pointer hover:text-emerald-600 hover:underline transition" onclick="openStudentDetail('${s.id}')">${s.name}</td>
-          <td class="px-4 py-3 text-gray-600">${s.student_number || '-'}</td>
-          <td class="px-4 py-3 text-gray-600">${s.room}</td>
-          <td class="px-4 py-3 text-gray-600">${s.bed}</td>
-          <td class="px-4 py-3 text-gray-600">${s.class_name || '-'}</td>
+      emptyState.classList.add('hidden');
+
+      tbody.innerHTML = students.map(s => {
+        const roleClass = s.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800';
+        const roleText = s.role === 'admin' ? '👑 管理員' : '👤 學生';
+        const lineClass = s.line_user_id ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+        const lineText = s.line_user_id ? '✅ 已綁定' : '⏳ 未綁定';
+        const adminBtnClass = s.role === 'admin' ? 'border-purple-300 text-purple-700 hover:bg-purple-50' : 'border-gray-300 text-gray-600 hover:bg-gray-50';
+        const adminBtnText = s.role === 'admin' ? '取消管理員' : '設為管理員';
+
+        return `<tr class="hover:bg-gray-50 transition">
+          <td class="px-4 py-3 font-medium text-gray-800">
+            <button onclick="openStudentDetail('${escapeHTML(s.id)}')" class="hover:text-emerald-600 hover:underline transition text-left bg-transparent border-none cursor-pointer p-0">
+              ${escapeHTML(s.name)}
+            </button>
+          </td>
+          <td class="px-4 py-3 text-gray-600">${escapeHTML(s.student_number || '-')}</td>
+          <td class="px-4 py-3 text-gray-600">${escapeHTML(s.room)}</td>
+          <td class="px-4 py-3 text-gray-600">${escapeHTML(s.bed)}</td>
+          <td class="px-4 py-3 text-gray-600">${escapeHTML(s.class_name || '-')}</td>
           <td class="px-4 py-3">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}">
-              ${s.role === 'admin' ? '👑 管理員' : '👤 學生'}
-            </span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleClass}">${roleText}</span>
           </td>
           <td class="px-4 py-3">
-            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.line_user_id ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
-              ${s.line_user_id ? '✅ 已綁定' : '⏳ 未綁定'}
-            </span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${lineClass}">${lineText}</span>
           </td>
           <td class="px-4 py-3">
             <div class="flex gap-2 flex-wrap">
-              <button onclick="openStudentDetail('${s.id}')" class="text-xs px-2 py-1 rounded border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition">查看</button>
-              <button onclick="toggleAdmin('${s.id}', '${s.role}')" class="text-xs px-2 py-1 rounded border ${s.role === 'admin' ? 'border-purple-300 text-purple-700 hover:bg-purple-50' : 'border-gray-300 text-gray-600 hover:bg-gray-50'} transition">
-                ${s.role === 'admin' ? '取消管理員' : '設為管理員'}
-              </button>
-              <button onclick="deleteStudent('${s.id}', '${s.name}')" class="text-xs px-2 py-1 rounded border border-red-300 text-red-600 hover:bg-red-50 transition">刪除</button>
+              <button onclick="openStudentDetail('${escapeHTML(s.id)}')" class="text-xs px-2 py-1 rounded border border-emerald-300 text-emerald-700 hover:bg-emerald-50 transition">查看</button>
+              <button onclick="toggleAdmin('${escapeHTML(s.id)}', '${escapeHTML(s.role || 'student')}')" class="text-xs px-2 py-1 rounded border ${adminBtnClass} transition">${adminBtnText}</button>
+              <button onclick="deleteStudent('${escapeHTML(s.id)}', '${escapeHTML(s.name)}')" class="text-xs px-2 py-1 rounded border border-red-300 text-red-600 hover:bg-red-50 transition">刪除</button>
             </div>
           </td>
-        </tr>
-      `).join('');
+        </tr>`;
+      }).join('');
     }
 
+    function sortStudents(field) {
+      if (sortField === field) {
+        sortAsc = !sortAsc;
+      } else {
+        sortField = field;
+        sortAsc = true;
+      }
+      ['name', 'student_number', 'room'].forEach(f => {
+        const el = document.getElementById(`sort-${f}`);
+        if (el) el.textContent = sortField === f ? (sortAsc ? '▲' : '▼') : '';
+      });
+      const sorted = [...allStudents].sort((a, b) => {
+        const aVal = (a[field] || '').toString().toLowerCase();
+        const bVal = (b[field] || '').toString().toLowerCase();
+        if (aVal < bVal) return sortAsc ? -1 : 1;
+        if (aVal > bVal) return sortAsc ? 1 : -1;
+        return 0;
+      });
+      renderStudents(sorted);
+    }
+
+    const debouncedFilterStudents = debounce(() => filterStudents(), 250);
+
     function filterStudents() {
-      const keyword = document.getElementById('studentSearch').value.toLowerCase();
+      const keyword = document.getElementById('studentSearch').value.toLowerCase().trim();
+      if (!keyword) {
+        renderStudents(allStudents);
+        return;
+      }
       const filtered = allStudents.filter(s =>
-        s.name.toLowerCase().includes(keyword) ||
+        (s.name || '').toLowerCase().includes(keyword) ||
         (s.student_number || '').toLowerCase().includes(keyword) ||
-        s.room.toLowerCase().includes(keyword) ||
-        s.bed.toLowerCase().includes(keyword)
+        (s.room || '').toLowerCase().includes(keyword) ||
+        (s.bed || '').toLowerCase().includes(keyword)
       );
       renderStudents(filtered);
     }
 
     async function loadRecords() {
+      const tbody = document.getElementById('recordsTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">載入中...</td></tr>';
       try {
-        const res = await fetch(`${API_BASE}/api/admin/records`);
-        const json = await res.json();
+        const json = await apiRequest(`${API_BASE}/api/admin/records`);
         allRecordsData = json.data || [];
-        const tbody = document.getElementById('recordsTableBody');
-        if (!allRecordsData.length) {
-          tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">沒有記點紀錄</td></tr>';
-          return;
-        }
-        tbody.innerHTML = allRecordsData.map(r => `
-          <tr class="hover:bg-gray-50 transition">
-            <td class="px-4 py-3 text-gray-800">${r.violation_date}</td>
-            <td class="px-4 py-3 font-medium text-gray-800">${r.students?.name || '未知'}</td>
-            <td class="px-4 py-3 text-gray-600">${r.students?.room || ''}-${r.students?.bed || ''}</td>
-            <td class="px-4 py-3"><span class="${r.points < 0 ? 'text-emerald-600' : 'text-red-600'} font-bold">${r.points > 0 ? '+' : ''}${r.points}</span></td>
-            <td class="px-4 py-3 text-gray-600">${r.reason}</td>
-            <td class="px-4 py-3 text-gray-500 text-xs">${r.created_by?.slice(0, 8) || 'line'}...</td>
-          </tr>
-        `).join('');
-      } catch (e) { showToast('載入記點紀錄失敗：' + e.message); }
+        renderRecords(allRecordsData);
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-red-400">載入失敗：${escapeHTML(e.message)}</td></tr>`;
+        showToast('❌ 載入記點紀錄失敗：' + e.message);
+      }
+    }
+
+    function renderRecords(records) {
+      const tbody = document.getElementById('recordsTableBody');
+      if (!records.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">沒有記點紀錄</td></tr>';
+        return;
+      }
+      tbody.innerHTML = records.map(r => {
+        const name = escapeHTML(r.students?.name || '未知');
+        const room = escapeHTML(r.students?.room || '');
+        const bed = escapeHTML(r.students?.bed || '');
+        const reason = escapeHTML(r.reason || '');
+        const creator = escapeHTML((r.created_by || 'line').slice(0, 10));
+        const pointClass = r.points < 0 ? 'text-emerald-600' : 'text-red-600';
+        const pointPrefix = r.points > 0 ? '+' : '';
+
+        return `<tr class="hover:bg-gray-50 transition">
+          <td class="px-4 py-3 text-gray-800">${escapeHTML(r.violation_date || '-')}</td>
+          <td class="px-4 py-3 font-medium text-gray-800">${name}</td>
+          <td class="px-4 py-3 text-gray-600">${room}${bed ? '-' + bed : ''}</td>
+          <td class="px-4 py-3"><span class="${pointClass} font-bold">${pointPrefix}${r.points}</span></td>
+          <td class="px-4 py-3 text-gray-600">${reason}</td>
+          <td class="px-4 py-3 text-gray-500 text-xs">${creator}...</td>
+        </tr>`;
+      }).join('');
     }
 
     async function loadRanking() {
+      const container = document.getElementById('rankingContent');
+      container.innerHTML = '<div class="text-center text-gray-400 py-8">載入中...</div>';
       try {
-        const res = await fetch(`${API_BASE}/api/admin/stats`);
-        const json = await res.json();
-        const container = document.getElementById('rankingContent');
+        let json = cachedStats;
+        if (!json) {
+          json = await apiRequest(`${API_BASE}/api/admin/stats`);
+          cachedStats = json;
+        }
         const list = json.topStudents || [];
         if (!list.length) {
           container.innerHTML = '<div class="text-center text-gray-400 py-8">暫無記點資料</div>';
           return;
         }
-        container.innerHTML = list.map((s, i) => `
-          <div class="flex items-center gap-4 bg-gray-50 rounded-lg p-4 ${i < 3 ? 'border-l-4 ' + (i === 0 ? 'border-yellow-400' : i === 1 ? 'border-gray-400' : 'border-orange-400') : ''}">
+        container.innerHTML = list.map((s, i) => {
+          const borderClass = i < 3 ? 'border-l-4 ' + (i === 0 ? 'border-yellow-400' : i === 1 ? 'border-gray-400' : 'border-orange-400') : '';
+          return `<div class="flex items-center gap-4 bg-gray-50 rounded-lg p-4 ${borderClass}">
             <div class="text-2xl font-bold text-gray-400 w-8 text-center">${i + 1}</div>
             <div class="flex-1">
-              <div class="font-bold text-gray-800">${s.name}</div>
-              <div class="text-sm text-gray-500">${s.room}-${s.bed} · 被記 ${s.count} 次</div>
+              <div class="font-bold text-gray-800">${escapeHTML(s.name)}</div>
+              <div class="text-sm text-gray-500">${escapeHTML(s.room)}-${escapeHTML(s.bed)} · 被記 ${s.count} 次</div>
             </div>
             <div class="text-right">
               <div class="text-2xl font-bold text-red-600">${s.total}</div>
               <div class="text-xs text-gray-500">點</div>
             </div>
-          </div>
-        `).join('');
-      } catch (e) { showToast('載入排行榜失敗：' + e.message); }
+          </div>`;
+        }).join('');
+      } catch (e) {
+        container.innerHTML = `<div class="text-center text-red-400 py-8">載入失敗：${escapeHTML(e.message)}</div>`;
+        showToast('❌ 載入排行榜失敗：' + e.message);
+      }
     }
 
-    // ===== 學生詳情 =====
     function openStudentDetail(id) {
       currentDetailStudentId = id;
       const student = allStudents.find(s => s.id === id);
@@ -491,23 +633,27 @@
 
       const form = document.getElementById('editForm');
       form.id.value = student.id;
-      form.name.value = student.name;
+      form.name.value = student.name || '';
       form.student_number.value = student.student_number || '';
-      form.room.value = student.room;
-      form.bed.value = student.bed;
+      form.room.value = student.room || '';
+      form.bed.value = student.bed || '';
       form.class_name.value = student.class_name || '';
       form.role.value = student.role || 'student';
 
       document.getElementById('deductForm').student_id.value = id;
       loadStudentRecords(id);
 
-      document.getElementById('detailModal').classList.remove('hidden');
-      document.getElementById('detailModal').classList.add('flex');
+      const modal = document.getElementById('detailModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
     }
 
     function closeStudentDetail() {
-      document.getElementById('detailModal').classList.add('hidden');
-      document.getElementById('detailModal').classList.remove('flex');
+      const modal = document.getElementById('detailModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
       currentDetailStudentId = null;
     }
 
@@ -515,57 +661,56 @@
       const container = document.getElementById('studentRecordsList');
       container.innerHTML = '<div class="text-sm text-gray-400 text-center py-4">載入中...</div>';
       try {
-        const res = await fetch(`${API_BASE}/api/admin/records?student_id=${id}`);
-        const json = await res.json();
+        const json = await apiRequest(`${API_BASE}/api/admin/records?student_id=${encodeURIComponent(id)}`);
         renderStudentRecords(json.data || []);
       } catch (e) {
-        container.innerHTML = `<div class="text-sm text-red-400 text-center py-4">載入失敗：${e.message}</div>`;
+        container.innerHTML = `<div class="text-sm text-red-400 text-center py-4">載入失敗：${escapeHTML(e.message)}</div>`;
       }
     }
 
     function renderStudentRecords(records) {
       const container = document.getElementById('studentRecordsList');
       const totalPoints = records.reduce((sum, r) => sum + (r.points || 0), 0);
-      document.getElementById('currentTotalPoints').textContent = totalPoints + ' 點';
-      document.getElementById('currentTotalPoints').className = 'px-2 py-1.5 bg-white border border-gray-200 rounded text-sm font-bold ' + (totalPoints > 0 ? 'text-red-600' : 'text-emerald-600');
+      const totalEl = document.getElementById('currentTotalPoints');
+      totalEl.textContent = totalPoints + ' 點';
+      totalEl.className = 'px-2 py-1.5 bg-white border border-gray-200 rounded text-sm font-bold ' + (totalPoints > 0 ? 'text-red-600' : 'text-emerald-600');
 
       if (!records.length) {
         container.innerHTML = '<div class="text-sm text-gray-400 text-center py-4">暫無記點紀錄 👍</div>';
         return;
       }
 
-      container.innerHTML = records.map(r => `
-        <div class="bg-gray-50 rounded-lg p-3 text-sm border border-gray-100 group hover:border-emerald-300 transition">
+      container.innerHTML = records.map(r => {
+        const pointClass = r.points < 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50';
+        const pointPrefix = r.points > 0 ? '+' : '';
+        const cancelBtn = r.points > 0
+          ? `<button onclick="cancelRecord('${escapeHTML(r.id)}', '${escapeHTML(r.violation_date)}', ${r.points})" class="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition border border-emerald-200" title="消點（刪除這筆紀錄）">✕ 消點</button>`
+          : '';
+
+        return `<div class="bg-gray-50 rounded-lg p-3 text-sm border border-gray-100 group hover:border-emerald-300 transition">
           <div class="flex justify-between items-start">
-            <span class="text-gray-500 text-xs">${r.violation_date}</span>
+            <span class="text-gray-500 text-xs">${escapeHTML(r.violation_date || '-')}</span>
             <div class="flex items-center gap-2">
-              <span class="${r.points < 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50'} font-bold px-2 py-0.5 rounded text-xs">${r.points > 0 ? '+' : ''}${r.points}</span>
-              ${r.points > 0 ? `<button onclick="cancelRecord('${r.id}', '${r.violation_date}', ${r.points})" class="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition border border-emerald-200" title="消點（刪除這筆紀錄）">✕ 消點</button>` : ''}
+              <span class="${pointClass} font-bold px-2 py-0.5 rounded text-xs">${pointPrefix}${r.points}</span>
+              ${cancelBtn}
             </div>
           </div>
-          <div class="text-gray-700 mt-1 font-medium">${r.reason}</div>
-          <div class="text-gray-400 text-xs mt-1">記錄者：${r.created_by?.slice(0, 10) || 'line'}...</div>
-        </div>
-      `).join('');
+          <div class="text-gray-700 mt-1 font-medium">${escapeHTML(r.reason || '')}</div>
+          <div class="text-gray-400 text-xs mt-1">記錄者：${escapeHTML((r.created_by || 'line').slice(0, 10))}...</div>
+        </div>`;
+      }).join('');
     }
 
     async function cancelRecord(recordId, date, points) {
-      if (!confirm(`確定要消點嗎？
-
-將刪除這筆紀錄：
-日期：${date}
-點數：+${points}
-
-此操作無法復原！`)) return;
+      if (!confirm(`確定要消點嗎？\n\n將刪除這筆紀錄：\n日期：${date}\n點數：+${points}\n\n此操作無法復原！`)) return;
       try {
-        const res = await fetch(`${API_BASE}/api/admin/records`, {
-          method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+        await apiRequest(`${API_BASE}/api/admin/records`, {
+          method: 'DELETE',
           body: JSON.stringify({ id: recordId })
         });
-        if (!res.ok) throw new Error('消點失敗');
         showToast('✅ 已消點');
         if (currentDetailStudentId) loadStudentRecords(currentDetailStudentId);
-        loadStats();
+        loadStats(true);
         if (currentTab === 'records') loadRecords();
         if (currentTab === 'ranking') loadRanking();
       } catch (e) { showToast('❌ 消點失敗：' + e.message); }
@@ -574,72 +719,142 @@
     async function submitEditStudent(e) {
       e.preventDefault();
       const form = e.target;
-      const data = { id: form.id.value, name: form.name.value, student_number: form.student_number.value, room: form.room.value, bed: form.bed.value, class_name: form.class_name.value || null, role: form.role.value };
+      const data = {
+        id: form.id.value,
+        name: form.name.value.trim(),
+        student_number: form.student_number.value.trim(),
+        room: form.room.value.trim(),
+        bed: form.bed.value.trim(),
+        class_name: form.class_name.value.trim() || null,
+        role: form.role.value
+      };
+      if (!data.name || !data.student_number || !data.room || !data.bed) {
+        showToast('❌ 請填寫所有必填欄位');
+        return;
+      }
+      setButtonLoading('editSubmitBtn', true);
       try {
-        const res = await fetch(`${API_BASE}/api/admin/students`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!res.ok) throw new Error('更新失敗');
+        await apiRequest(`${API_BASE}/api/admin/students`, {
+          method: 'PUT',
+          body: JSON.stringify(data)
+        });
         showToast('✅ 學生資料已更新');
-        closeStudentDetail(); loadStudents(); loadStats();
-      } catch (e) { showToast('❌ 更新失敗：' + e.message); }
+        closeStudentDetail();
+        loadStudents();
+        loadStats(true);
+      } catch (e) {
+        showToast('❌ 更新失敗：' + e.message);
+      } finally {
+        setButtonLoading('editSubmitBtn', false, '💾 儲存變更');
+      }
     }
 
     async function submitDeduct(e) {
       e.preventDefault();
       const form = e.target;
       const studentId = form.student_id.value;
-      const points = form.points.value;
-      const reason = form.reason.value;
+      const points = parseInt(form.points.value, 10);
+      const reason = form.reason.value.trim();
       if (!studentId) { showToast('❌ 請先選擇學生'); return; }
+      if (!points || points < 1) { showToast('❌ 消點數必須大於 0'); return; }
+      if (!reason) { showToast('❌ 請填寫消點原因'); return; }
+
+      setButtonLoading('deductSubmitBtn', true);
       try {
-        const res = await fetch(`${API_BASE}/api/admin/records`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ student_id: studentId, points: points, reason: reason })
+        await apiRequest(`${API_BASE}/api/admin/records`, {
+          method: 'POST',
+          body: JSON.stringify({
+            student_id: studentId,
+            points: -Math.abs(points),
+            reason: reason
+          })
         });
-        if (!res.ok) throw new Error('消點失敗');
         showToast(`✅ 已消點 ${points} 點`);
-        form.reset(); form.student_id.value = studentId;
-        loadStudentRecords(studentId); loadStats();
+        form.reset();
+        form.student_id.value = studentId;
+        loadStudentRecords(studentId);
+        loadStats(true);
         if (currentTab === 'records') loadRecords();
         if (currentTab === 'ranking') loadRanking();
-      } catch (e) { showToast('❌ 消點失敗：' + e.message); }
+      } catch (e) {
+        showToast('❌ 消點失敗：' + e.message);
+      } finally {
+        setButtonLoading('deductSubmitBtn', false, '✓ 確認消點');
+      }
     }
 
-    // ===== 新增學生 =====
     function openAddModal() {
-      document.getElementById('addModal').classList.remove('hidden');
-      document.getElementById('addModal').classList.add('flex');
+      const modal = document.getElementById('addModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.getElementById('addName').focus();
+      document.body.style.overflow = 'hidden';
     }
+
     function closeAddModal() {
-      document.getElementById('addModal').classList.add('hidden');
-      document.getElementById('addModal').classList.remove('flex');
+      const modal = document.getElementById('addModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
       document.getElementById('addForm').reset();
+      document.getElementById('addNameError').classList.add('hidden');
+      document.body.style.overflow = '';
     }
+
     async function submitAddStudent(e) {
       e.preventDefault();
       const form = e.target;
-      const data = { name: form.name.value, student_number: form.student_number.value, room: form.room.value, bed: form.bed.value, class_name: form.class_name.value || null, role: form.is_admin.checked ? 'admin' : 'student' };
+      const name = form.name.value.trim();
+      const studentNumber = form.student_number.value.trim();
+      if (!name) {
+        document.getElementById('addNameError').classList.remove('hidden');
+        document.getElementById('addName').focus();
+        return;
+      }
+      document.getElementById('addNameError').classList.add('hidden');
+      const data = {
+        name: name,
+        student_number: studentNumber,
+        room: form.room.value.trim(),
+        bed: form.bed.value.trim(),
+        class_name: form.class_name.value.trim() || null,
+        role: form.is_admin.checked ? 'admin' : 'student'
+      };
+      setButtonLoading('addSubmitBtn', true);
       try {
-        const res = await fetch(`${API_BASE}/api/admin/students`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-        if (!res.ok) throw new Error('新增失敗');
+        await apiRequest(`${API_BASE}/api/admin/students`, {
+          method: 'POST',
+          body: JSON.stringify(data)
+        });
         showToast('✅ 新增學生成功！');
-        closeAddModal(); loadStudents(); loadStats();
-      } catch (e) { showToast('❌ 新增失敗：' + e.message); }
+        closeAddModal();
+        loadStudents();
+        loadStats(true);
+      } catch (e) {
+        showToast('❌ 新增失敗：' + e.message);
+      } finally {
+        setButtonLoading('addSubmitBtn', false, '新增');
+      }
     }
 
-    // ===== 📋 貼上匯入（Excel 複製貼上） =====
     function openPasteModal() {
-      document.getElementById('pasteModal').classList.remove('hidden');
-      document.getElementById('pasteModal').classList.add('flex');
+      const modal = document.getElementById('pasteModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
       document.getElementById('pasteInput').value = '';
       document.getElementById('pastePreview').classList.add('hidden');
       document.getElementById('pasteError').classList.add('hidden');
       document.getElementById('pasteSubmitBtn').disabled = true;
       pasteImportData = [];
+      document.getElementById('pasteInput').focus();
+      document.body.style.overflow = 'hidden';
     }
+
     function closePasteModal() {
-      document.getElementById('pasteModal').classList.add('hidden');
-      document.getElementById('pasteModal').classList.remove('flex');
+      const modal = document.getElementById('pasteModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
       pasteImportData = [];
+      document.body.style.overflow = '';
     }
 
     function parsePastedData() {
@@ -651,24 +866,18 @@
       previewDiv.classList.add('hidden');
       submitBtn.disabled = true;
       pasteImportData = [];
-
       if (!raw) return;
 
-      // 用 tab 或逗號分隔解析
-      const lines = raw.split('
-').filter(l => l.trim());
+      const lines = raw.split(/\r?\n/).filter(l => l.trim());
       if (lines.length < 2) {
         errorDiv.textContent = '❌ 至少需要標題列 + 一筆資料';
         errorDiv.classList.remove('hidden');
         return;
       }
 
-      // 判斷分隔符：優先用 tab，沒有 tab 再用逗號
-      const delimiter = raw.includes('	') ? '	' : ',';
-
+      const delimiter = raw.includes('\t') ? '\t' : ',';
       const headers = lines[0].split(delimiter).map(h => h.trim());
 
-      // 欄位對應（支援中文標題）
       const headerMap = {};
       headers.forEach((h, i) => {
         const lower = h.toLowerCase();
@@ -686,6 +895,7 @@
       }
 
       pasteImportData = [];
+      const errors = [];
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(delimiter).map(v => v.trim());
         const row = {
@@ -698,6 +908,8 @@
         };
         if (row.name && row.room && row.bed) {
           pasteImportData.push(row);
+        } else {
+          errors.push(`第 ${i + 1} 行：缺少必要資料`);
         }
       }
 
@@ -707,17 +919,21 @@
         return;
       }
 
-      // 顯示預覽
+      if (errors.length > 0 && errors.length <= 3) {
+        errorDiv.innerHTML = '⚠️ ' + errors.join('<br>');
+        errorDiv.classList.remove('hidden');
+      }
+
       const preview = pasteImportData.slice(0, 5);
       const previewHeaders = ['姓名', '學號', '寢室', '床號', '班級'];
-      document.getElementById('pastePreviewHead').innerHTML = previewHeaders.map(h => `<th class="px-3 py-2 text-left font-medium text-gray-600">${h}</th>`).join('');
+      document.getElementById('pastePreviewHead').innerHTML = previewHeaders.map(h => `<th class="px-3 py-2 text-left font-medium text-gray-600">${escapeHTML(h)}</th>`).join('');
       document.getElementById('pastePreviewBody').innerHTML = preview.map(row => `
         <tr class="border-b border-gray-100">
-          <td class="px-3 py-2 text-gray-700">${row.name}</td>
-          <td class="px-3 py-2 text-gray-600">${row.student_number || '-'}</td>
-          <td class="px-3 py-2 text-gray-600">${row.room}</td>
-          <td class="px-3 py-2 text-gray-600">${row.bed}</td>
-          <td class="px-3 py-2 text-gray-600">${row.class_name || '-'}</td>
+          <td class="px-3 py-2 text-gray-700">${escapeHTML(row.name)}</td>
+          <td class="px-3 py-2 text-gray-600">${escapeHTML(row.student_number || '-')}</td>
+          <td class="px-3 py-2 text-gray-600">${escapeHTML(row.room)}</td>
+          <td class="px-3 py-2 text-gray-600">${escapeHTML(row.bed)}</td>
+          <td class="px-3 py-2 text-gray-600">${escapeHTML(row.class_name || '-')}</td>
         </tr>
       `).join('');
       document.getElementById('pasteCount').textContent = pasteImportData.length;
@@ -729,79 +945,101 @@
       if (!pasteImportData.length) return;
       const btn = document.getElementById('pasteSubmitBtn');
       btn.disabled = true;
+      const originalText = btn.textContent;
       btn.textContent = '匯入中...';
-
       try {
-        const res = await fetch(`${API_BASE}/api/admin/students`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+        await apiRequest(`${API_BASE}/api/admin/students`, {
+          method: 'POST',
           body: JSON.stringify(pasteImportData)
         });
-        if (!res.ok) throw new Error('匯入失敗');
         showToast(`✅ 成功匯入 ${pasteImportData.length} 筆學生資料！`);
         closePasteModal();
-        loadStudents(); loadStats();
+        loadStudents();
+        loadStats(true);
       } catch (e) {
         showToast('❌ 匯入失敗：' + e.message);
         btn.disabled = false;
       } finally {
-        btn.textContent = '開始匯入';
+        btn.textContent = originalText;
       }
     }
 
-    // ===== 匯出報表 =====
     function exportRecords() {
       const rows = allRecordsData;
       if (!rows.length) { showToast('沒有資料可匯出'); return; }
-      let csv = '﻿日期,姓名,寢室,床號,點數,原因,記錄者
-';
+      let csv = '\uFEFF日期,姓名,寢室,床號,點數,原因,記錄者\n';
       rows.forEach(r => {
         const name = (r.students?.name || '未知').replace(/,/g, '，');
         const room = r.students?.room || '';
         const bed = r.students?.bed || '';
-        const reason = (r.reason || '').replace(/,/g, '，').replace(/
-/g, ' ');
+        const reason = (r.reason || '').replace(/,/g, '，').replace(/\n/g, ' ');
         const creator = (r.created_by || 'line').slice(0, 10);
-        csv += `${r.violation_date},${name},${room},${bed},${r.points},${reason},${creator}
-`;
+        csv += `${r.violation_date || ''},${name},${room},${bed},${r.points || 0},${reason},${creator}\n`;
       });
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.download = `宿舍記點報表_${new Date().toISOString().slice(0,10)}.csv`;
-      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      link.download = `宿舍記點報表_${dateStr}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
       showToast('✅ 報表已下載');
     }
 
     async function toggleAdmin(id, currentRole) {
       const newRole = currentRole === 'admin' ? 'student' : 'admin';
       try {
-        const res = await fetch(`${API_BASE}/api/admin/students`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, role: newRole }) });
-        if (!res.ok) throw new Error('更新失敗');
+        await apiRequest(`${API_BASE}/api/admin/students`, {
+          method: 'PUT',
+          body: JSON.stringify({ id, role: newRole })
+        });
         showToast(newRole === 'admin' ? '✅ 已設為管理員' : '✅ 已取消管理員');
         loadStudents();
       } catch (e) { showToast('❌ 更新失敗：' + e.message); }
     }
 
     async function deleteStudent(id, name) {
-      if (!confirm(`確定要刪除「${name}」嗎？
-這也會刪除他的所有記點紀錄！`)) return;
+      if (!confirm(`確定要刪除「${name}」嗎？\n這也會刪除他的所有記點紀錄！`)) return;
       try {
-        const res = await fetch(`${API_BASE}/api/admin/students`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
-        if (!res.ok) throw new Error('刪除失敗');
+        await apiRequest(`${API_BASE}/api/admin/students`, {
+          method: 'DELETE',
+          body: JSON.stringify({ id })
+        });
         showToast('✅ 已刪除');
-        loadStudents(); loadStats();
+        loadStudents();
+        loadStats(true);
       } catch (e) { showToast('❌ 刪除失敗：' + e.message); }
     }
 
+    let toastTimer = null;
     function showToast(msg) {
       const toast = document.getElementById('toast');
       document.getElementById('toastMsg').textContent = msg;
       toast.classList.remove('translate-y-20', 'opacity-0');
-      setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
     }
 
-    loadStats();
-    loadStudents();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (!document.getElementById('detailModal').classList.contains('hidden')) {
+          closeStudentDetail();
+        } else if (!document.getElementById('addModal').classList.contains('hidden')) {
+          closeAddModal();
+        } else if (!document.getElementById('pasteModal').classList.contains('hidden')) {
+          closePasteModal();
+        }
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+      loadStudents();
+    });
   </script>
 </body>
 </html>
