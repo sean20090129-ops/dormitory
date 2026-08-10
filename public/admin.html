@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>宿舍記點管理後台</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Noto Sans TC', sans-serif; }
@@ -118,7 +119,7 @@
         </div>
         <button onclick="exportRecords()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 focus:ring-2 focus:ring-blue-400">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          匯出報表 (CSV)
+          匯出報表 (Excel)
         </button>
       </div>
       <div class="overflow-x-auto">
@@ -1024,25 +1025,60 @@
     function exportRecords() {
       const rows = allRecordsData;
       if (!rows.length) { showToast('沒有資料可匯出'); return; }
-      let csv = '\uFEFF日期,姓名,寢室,床號,點數,原因,記錄者\n';
+
+      // 準備 Excel 資料
+      const data = [
+        ['日期', '姓名', '寢室', '床號', '點數', '原因', '記錄者']
+      ];
       rows.forEach(r => {
-        const name = (r.students?.name || '未知').replace(/,/g, '，');
-        const room = r.students?.room || '';
-        const bed = r.students?.bed || '';
-        const reason = (r.reason || '').replace(/,/g, '，').replace(/\n/g, ' ');
-        const creator = (r.created_by || 'line').slice(0, 10);
-        csv += `${r.violation_date || ''},${name},${room},${bed},${r.points || 0},${reason},${creator}\n`;
+        data.push([
+          r.violation_date || '',
+          r.students?.name || '未知',
+          r.students?.room || '',
+          r.students?.bed || '',
+          r.points || 0,
+          r.reason || '',
+          (r.created_by || 'line').slice(0, 10)
+        ]);
       });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
+
+      // 建立工作表
+      const ws = XLSX.utils.aoa_to_sheet(data);
+
+      // 設定欄寬
+      ws['!cols'] = [
+        { wch: 14 },  // 日期
+        { wch: 12 },  // 姓名
+        { wch: 8 },   // 寢室
+        { wch: 8 },   // 床號
+        { wch: 8 },   // 點數
+        { wch: 30 },  // 原因
+        { wch: 12 }   // 記錄者
+      ];
+
+      // 設定標題列樣式（粗體、背景色）
+      const headerStyle = {
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '10B981' }, patternType: 'solid' },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      };
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cellAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+        if (!ws[cellAddr]) continue;
+        ws[cellAddr].s = headerStyle;
+      }
+
+      // 凍結首列
+      ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft' };
+
+      // 建立活頁簿並寫入
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '記點紀錄');
+
       const dateStr = new Date().toISOString().slice(0, 10);
-      link.download = `宿舍記點報表_${dateStr}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-      showToast('✅ 報表已下載');
+      XLSX.writeFile(wb, `宿舍記點報表_${dateStr}.xlsx`);
+      showToast('✅ Excel 報表已下載');
     }
 
     async function toggleAdmin(id, currentRole) {
