@@ -1079,7 +1079,7 @@ select:focus {
         debounceTimer = setTimeout(() => fn.apply(this, args), delay);
       };
     }
-
+   
     async function apiRequest(url, options = {}) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -1089,9 +1089,11 @@ select:focus {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
+            'x-admin-key': 'ADMIN_API_KEY',  // 貼上跟Vercel環境變數一樣的值
             ...(options.headers || {})
           }
         });
+    // ...後面不變
         clearTimeout(timeoutId);
         if (!res.ok) {
           const errorText = await res.text().catch(() => '未知錯誤');
