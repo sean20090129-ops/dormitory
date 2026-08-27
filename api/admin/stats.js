@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { checkAdminAuth } from "../_auth.js";
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -7,21 +8,23 @@ const supabase = createClient(
 
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json");
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", process.env.ALLOWED_ORIGIN || "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-key");
+  if (req.method === "OPTIONS") return res.status(200).end();
+
+  if (!checkAdminAuth(req, res)) return;
 
   try {
     const { count: totalStudents } = await supabase.from("students").select("*", { count: "exact", head: true });
     const { data: records } = await supabase.from("violation_records").select("points");
     const totalPoints = records?.reduce((sum, r) => sum + r.points, 0) || 0;
-
     const today = new Date().toISOString().slice(0, 10);
     const { data: todayRecords } = await supabase.from("violation_records").select("points").eq("violation_date", today);
     const todayPoints = todayRecords?.reduce((sum, r) => sum + r.points, 0) || 0;
-
     const { data: ranking } = await supabase
       .from("violation_records")
       .select("student_id, points, students:student_id (name, room, bed)");
-
     const studentMap = {};
     ranking?.forEach(r => {
       const key = r.student_id;
@@ -37,11 +40,9 @@ export default async function handler(req, res) {
       studentMap[key].total += r.points;
       studentMap[key].count += 1;
     });
-
     const topStudents = Object.values(studentMap)
       .sort((a, b) => b.total - a.total)
       .slice(0, 10);
-
     res.status(200).json({
       totalStudents: totalStudents || 0,
       totalRecords: records?.length || 0,
