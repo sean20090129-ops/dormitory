@@ -992,13 +992,13 @@ select:focus {
 
   <script>
     // ========================================================
-    // 密碼保護設定：把下面這個字串改成你要的密碼即可
+    // 密碼保護設定
+    // 密碼本身「不」寫在這裡，而是送到後端 /api/admin/login 比對，
+    // 比對正確後後端才會把 ADMIN_API_KEY 回傳給前端。
     // ========================================================
-    const GATE_PASSWORD = 'dorm2026';
     const GATE_SESSION_KEY = 'dorm_admin_authed';
-    const ADMIN_API_KEY = 'dorm2026';
-    // sessionStorage 在某些沙盒環境（例如聊天室內的預覽框）會被瀏覽器擋掉並丟出例外，
-    // 所以這裡包一層安全存取，失敗時自動退回記憶體變數，不會讓整個頁面壞掉。
+    let ADMIN_API_KEY = null; // 登入成功後才會被賦值
+
     let memoryAuthFlag = null;
     function safeGet(key) {
       try { return sessionStorage.getItem(key); } catch (e) { return memoryAuthFlag; }
@@ -1013,22 +1013,42 @@ select:focus {
     }
 
     function checkGateOnLoad() {
-      if (safeGet(GATE_SESSION_KEY) === '1') {
+      const savedKey = safeGet(GATE_SESSION_KEY);
+      if (savedKey) {
+        ADMIN_API_KEY = savedKey;
         unlockApp();
       } else {
         document.getElementById('gatePassword').focus();
       }
     }
 
-    function submitGatePassword(e) {
+    async function submitGatePassword(e) {
       e.preventDefault();
       const input = document.getElementById('gatePassword');
       const errorEl = document.getElementById('gateError');
-      if (input.value === GATE_PASSWORD) {
-        safeSet(GATE_SESSION_KEY, '1');
-        errorEl.classList.add('hidden');
-        unlockApp();
-      } else {
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+
+      submitBtn.disabled = true;
+      const originalBtnText = submitBtn.textContent;
+      submitBtn.textContent = '驗證中...';
+
+      try {
+        const res = await fetch(`${window.location.origin}/api/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: input.value })
+        });
+        const json = await res.json().catch(() => ({}));
+
+        if (res.ok && json.apiKey) {
+          ADMIN_API_KEY = json.apiKey;
+          safeSet(GATE_SESSION_KEY, json.apiKey);
+          errorEl.classList.add('hidden');
+          unlockApp();
+        } else {
+          throw new Error('密碼錯誤');
+        }
+      } catch (err) {
         errorEl.classList.remove('hidden');
         input.value = '';
         input.focus();
@@ -1036,6 +1056,9 @@ select:focus {
         box.classList.remove('shake');
         void box.offsetWidth;
         box.classList.add('shake');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
       }
     }
 
@@ -1048,6 +1071,7 @@ select:focus {
 
     function logoutGate() {
       safeRemove(GATE_SESSION_KEY);
+      ADMIN_API_KEY = null;
       location.reload();
     }
 
@@ -1079,7 +1103,7 @@ select:focus {
         debounceTimer = setTimeout(() => fn.apply(this, args), delay);
       };
     }
-   
+
     async function apiRequest(url, options = {}) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
@@ -1089,11 +1113,10 @@ select:focus {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json',
-            'x-admin-key': ADMIN_API_KEY,  // 貼上跟Vercel環境變數一樣的值
+            'x-admin-key': ADMIN_API_KEY,
             ...(options.headers || {})
           }
         });
-    // ...後面不變
         clearTimeout(timeoutId);
         if (!res.ok) {
           const errorText = await res.text().catch(() => '未知錯誤');
