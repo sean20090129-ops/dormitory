@@ -1,76 +1,82 @@
-# Dorm LINE Webhook
+# 🏠 宿舍記點管理系統
 
-這是宿舍記點系統的 LINE Webhook 後端。
+一個結合 **LINE Bot** 與 **Web 管理後台** 的宿舍違規記點系統，讓宿舍管理員能透過 LINE 直接記點/消點，並透過網頁後台管理學生資料、查看記點紀錄與匯出報表。
 
-支援 LINE 群組指令：
+## ✨ 功能特色
 
-```text
-記點 211-1 1 拖鞋未收
+### LINE Bot
+- 🔗 **床位綁定**：學生輸入 `綁定 211-1` 即可將 LINE 帳號與床位連結
+- 📝 **記點 / 消點**：管理員可用 `記點 211-1 1 拖鞋未收` 或直接 `@提及` 學生來記點
+- 🔍 **查詢紀錄**：學生可隨時查詢自己的累計點數與違規明細
+- ✅ **防重複處理**：透過 webhook event ID 過濾 LINE 重送的重複訊息
+- 🔐 **簽章驗證**：所有 webhook 請求皆驗證 LINE 官方簽章，避免偽造請求
+
+### Web 管理後台
+- 👥 學生資料管理（新增 / 編輯 / 刪除 / Excel 貼上批次匯入）
+- 📊 即時統計儀表板（總人數、累計點數、今日記點）
+- 🏆 違規排行榜
+- 📥 一鍵匯出 Excel 記點報表
+- 🔑 後端登入驗證，密碼與 API 金鑰皆不暴露於前端原始碼
+
+## 🛠 技術棧
+
+| 類別 | 技術 |
+|---|---|
+| 後端 | Node.js（Vercel Serverless Functions） |
+| 資料庫 | Supabase（PostgreSQL） |
+| 前端 | HTML / Tailwind CSS / Vanilla JS |
+| 訊息平台 | LINE Messaging API |
+| 部署 | Vercel |
+| Excel 匯出 | SheetJS (xlsx) |
+
+## 🏗 系統架構
+
+```
+LINE 使用者
+   │  傳送訊息
+   ▼
+LINE Messaging API
+   │  webhook
+   ▼
+Vercel Serverless Function (/api/line/webhook)
+   │  簽章驗證 → 解析指令 → 讀寫資料
+   ▼
+Supabase (PostgreSQL)
+   ▲
+   │  管理員登入後，透過已驗證的 API 存取
+Web 管理後台 (admin.html)
+   │
+   ▼
+管理員瀏覽器
 ```
 
-格式：
+## 📁 專案結構
 
-```text
-記點 寢室-床號 點數 原因
+```
+├── api/
+│   ├── line/
+│   │   └── webhook.js      # LINE Bot 訊息處理
+│   └── admin/
+│       ├── login.js        # 登入驗證，比對密碼並發放 API Key
+│       ├── stats.js        # 統計資料
+│       ├── students.js     # 學生 CRUD
+│       └── records.js      # 記點紀錄 CRUD
+└── admin.html               # 管理後台前端頁面
 ```
 
-## 需要的環境變數
+## 🚀 主要指令一覽（LINE Bot）
 
-部署到 Vercel 後，在 Project Settings -> Environment Variables 新增：
+| 指令 | 說明 |
+|---|---|
+| `我是誰` | 查詢自己的 LINE ID |
+| `綁定 211-1` | 綁定床位 |
+| `解除綁定` | 解除目前綁定的床位 |
+| `查詢` / `我的記點` | 查詢個人記點紀錄 |
+| `記點 211-1 1 拖鞋未收` | 管理員記點（格式：寢室-床號 點數 原因） |
+| `消點 211-1 1 主動打掃` | 管理員消點 |
 
-```text
-LINE_CHANNEL_SECRET
-LINE_CHANNEL_ACCESS_TOKEN
-SUPABASE_URL
-SUPABASE_SERVICE_ROLE_KEY
-```
+## 📌 待優化方向
 
-## Webhook URL
-
-部署後，LINE Developers 的 Webhook URL 填：
-
-```text
-https://你的-vercel-project.vercel.app/api/line/webhook
-```
-
-然後打開：
-
-```text
-Use webhook
-```
-
-並按 Verify。
-
-## Supabase 資料要求
-
-`students` 表需要有對應床位：
-
-```text
-room = 211
-bed = 1
-```
-
-LINE 收到：
-
-```text
-記點 211-1 1 拖鞋未收
-```
-
-就會新增一筆 `violation_records`。
-
-## 回覆範例
-
-成功：
-
-```text
-已登記成功
-211-1 測試學生
-+1 點
-原因：拖鞋未收
-```
-
-找不到學生：
-
-```text
-找不到 211-1 的學生，請確認學生資料是否已匯入。
-```
+- [ ] 後台登入改為完整的 session token 機制（目前為簡化版 API Key 驗證）
+- [ ] API 加入速率限制，防止暴力嘗試
+- [ ] 記點紀錄新增審核流程，避免誤記
