@@ -1909,7 +1909,35 @@ select:focus {
         ];
         students
           .slice()
-          .sort((a, b) => (totalsMap[normalize(b.id)] || 0) - (totalsMap[normalize(a.id)] || 0)) // 點數高到低排序
+          .sort((a, b) => {
+            // 依「寢室 → 床號」排序
+            // 例如：201-2、201-3、201-4、201-5、202-2、202-3……
+            const roomA = String(a.room ?? '').trim();
+            const roomB = String(b.room ?? '').trim();
+            const roomNumA = Number(roomA);
+            const roomNumB = Number(roomB);
+
+            if (Number.isFinite(roomNumA) && Number.isFinite(roomNumB) && roomNumA !== roomNumB) {
+              return roomNumA - roomNumB;
+            }
+
+            const roomCompare = roomA.localeCompare(roomB, 'zh-Hant', { numeric: true });
+            if (roomCompare !== 0) return roomCompare;
+
+            const bedA = String(a.bed ?? '').trim();
+            const bedB = String(b.bed ?? '').trim();
+            const bedNumA = Number(bedA);
+            const bedNumB = Number(bedB);
+
+            if (Number.isFinite(bedNumA) && Number.isFinite(bedNumB) && bedNumA !== bedNumB) {
+              return bedNumA - bedNumB;
+            }
+
+            const bedCompare = bedA.localeCompare(bedB, 'zh-Hant', { numeric: true });
+            if (bedCompare !== 0) return bedCompare;
+
+            return String(a.name ?? '').localeCompare(String(b.name ?? ''), 'zh-Hant');
+          })
           .forEach(s => {
             data.push([
               s.name || '',
