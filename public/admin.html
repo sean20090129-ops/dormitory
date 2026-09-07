@@ -758,10 +758,16 @@ select:focus {
           <h2 class="text-lg font-bold text-gray-800">記點紀錄</h2>
           <p class="text-sm text-gray-500">查看所有違規記點紀錄</p>
         </div>
-        <button onclick="exportRecords()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 focus:ring-2 focus:ring-blue-400">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          匯出報表 (Excel)
-        </button>
+        <div class="flex gap-2 flex-wrap">
+          <button onclick="exportRecords()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 focus:ring-2 focus:ring-blue-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            匯出報表 (Excel)
+          </button>
+          <button onclick="exportStudentTotals()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 focus:ring-2 focus:ring-orange-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+            匯出目前點數 (Excel)
+          </button>
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
@@ -1808,6 +1814,98 @@ select:focus {
       const dateStr = new Date().toISOString().slice(0, 10);
       XLSX.writeFile(wb, `宿舍記點報表_${dateStr}.xlsx`);
       showToast('✅ Excel 報表已下載');
+    }
+
+    // ========================================================
+    // 匯出「每個人目前的累計點數」報表
+    // 會重新抓取最新的學生與記點資料，依 student_id 加總，
+    // 確保匯出的是最新結果（不依賴畫面上是否已切換過分頁）。
+    // ========================================================
+    async function exportStudentTotals() {
+      const btn = document.querySelector('button[onclick="exportStudentTotals()"]');
+      const originalText = btn ? btn.textContent : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="w-4 h-4 spinner inline-block mr-1" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> 準備中...`;
+      }
+      try {
+        // 重新抓最新的學生 + 記點紀錄，避免用到舊的畫面快取資料
+        const [studentsJson, recordsJson] = await Promise.all([
+          apiRequest(`${API_BASE}/api/admin/students`),
+          apiRequest(`${API_BASE}/api/admin/records`)
+        ]);
+        const students = studentsJson.data || [];
+        const records = recordsJson.data || [];
+
+        if (!students.length) { showToast('沒有學生資料可匯出'); return; }
+
+        // 依 student_id 加總目前累計點數與被記次數
+        const totalsMap = {};
+        const countMap = {};
+        records.forEach(r => {
+          const sid = r.student_id || r.students?.id;
+          if (!sid) return;
+          totalsMap[sid] = (totalsMap[sid] || 0) + (r.points || 0);
+          countMap[sid] = (countMap[sid] || 0) + 1;
+        });
+
+        const data = [
+          ['姓名', '學號', '寢室', '床號', '班級', '目前累計點數', '記點筆數']
+        ];
+        students
+          .slice()
+          .sort((a, b) => (totalsMap[b.id] || 0) - (totalsMap[a.id] || 0)) // 點數高到低排序
+          .forEach(s => {
+            data.push([
+              s.name || '',
+              s.student_number || '',
+              s.room || '',
+              s.bed || '',
+              s.class_name || '',
+              totalsMap[s.id] || 0,
+              countMap[s.id] || 0
+            ]);
+          });
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = [
+          { wch: 12 }, // 姓名
+          { wch: 14 }, // 學號
+          { wch: 8 },  // 寢室
+          { wch: 8 },  // 床號
+          { wch: 14 }, // 班級
+          { wch: 14 }, // 目前累計點數
+          { wch: 10 }  // 記點筆數
+        ];
+
+        // 標題列樣式（橘色，與記點報表的綠色做區分）
+        const headerStyle = {
+          font: { bold: true, color: { rgb: 'FFFFFF' } },
+          fill: { fgColor: { rgb: 'F97316' }, patternType: 'solid' },
+          alignment: { horizontal: 'center', vertical: 'center' }
+        };
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cellAddr = XLSX.utils.encode_cell({ r: 0, c: C });
+          if (!ws[cellAddr]) continue;
+          ws[cellAddr].s = headerStyle;
+        }
+        ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft' };
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '目前累計點數');
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(wb, `宿舍目前累計點數_${dateStr}.xlsx`);
+        showToast('✅ 目前點數報表已下載');
+      } catch (e) {
+        showToast('❌ 匯出失敗：' + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      }
     }
 
     async function toggleAdmin(id, currentRole) {
