@@ -1839,14 +1839,69 @@ select:focus {
 
         if (!students.length) { showToast('沒有學生資料可匯出'); return; }
 
-        // 依 student_id 加總目前累計點數與被記次數
+        // 依學生對應加總目前累計點數與記點筆數
+        // 有些 API 回傳的記點資料沒有 student_id，只有 students 裡的姓名/寢室/床號，
+        // 因此先建立多種索引，避免最後全部變成 0。
         const totalsMap = {};
         const countMap = {};
+
+        const normalize = value => String(value ?? '').trim();
+
+        const studentById = {};
+        const studentByNumber = {};
+        const studentByNameRoomBed = {};
+
+        students.forEach(s => {
+          if (s.id != null) studentById[normalize(s.id)] = s;
+          if (s.student_number) studentByNumber[normalize(s.student_number)] = s;
+
+          const key = [
+            normalize(s.name),
+            normalize(s.room),
+            normalize(s.bed)
+          ].join('|');
+
+          if (key !== '||') studentByNameRoomBed[key] = s;
+        });
+
         records.forEach(r => {
-          const sid = r.student_id || r.students?.id;
-          if (!sid) return;
-          totalsMap[sid] = (totalsMap[sid] || 0) + (r.points || 0);
-          countMap[sid] = (countMap[sid] || 0) + 1;
+          const points = Number(r.points);
+          if (!Number.isFinite(points)) return;
+
+          let student = null;
+
+          // ① 最優先：記點資料自己的 student_id
+          const sid = normalize(r.student_id);
+          if (sid && studentById[sid]) {
+            student = studentById[sid];
+          }
+
+          // ② 如果 student_id 沒對上，嘗試 students.id
+          if (!student && r.students?.id != null) {
+            student = studentById[normalize(r.students.id)] || null;
+          }
+
+          // ③ 如果 API 把學號放在記點資料裡，也可以直接對應
+          if (!student && r.student_number) {
+            student = studentByNumber[normalize(r.student_number)] || null;
+          }
+
+          // ④ 最後用姓名 + 寢室 + 床號對應
+          if (!student && r.students) {
+            const key = [
+              normalize(r.students.name),
+              normalize(r.students.room),
+              normalize(r.students.bed)
+            ].join('|');
+
+            student = studentByNameRoomBed[key] || null;
+          }
+
+          if (!student || student.id == null) return;
+
+          const studentId = normalize(student.id);
+          totalsMap[studentId] = (totalsMap[studentId] || 0) + points;
+          countMap[studentId] = (countMap[studentId] || 0) + 1;
         });
 
         const data = [
@@ -1854,7 +1909,7 @@ select:focus {
         ];
         students
           .slice()
-          .sort((a, b) => (totalsMap[b.id] || 0) - (totalsMap[a.id] || 0)) // 點數高到低排序
+          .sort((a, b) => (totalsMap[normalize(b.id)] || 0) - (totalsMap[normalize(a.id)] || 0)) // 點數高到低排序
           .forEach(s => {
             data.push([
               s.name || '',
