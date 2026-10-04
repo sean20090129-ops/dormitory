@@ -845,7 +845,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
         <input type="password" id="gatePassword" name="password" required autocomplete="current-password"
           class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm text-center"
           placeholder="請輸入密碼" autofocus>
-        <p id="gateError" class="text-xs text-red-500 mt-2 hidden">❌ 密碼錯誤，請再試一次</p>
+        <p id="gateError" class="text-xs text-red-500 mt-2 hidden"> 密碼錯誤，請再試一次</p>
         <button type="submit" class="mt-4 w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition">
           進入後台
         </button>
@@ -891,9 +891,9 @@ button:not(:disabled):active{transform:scale(.985)!important}
     </section>
 
     <div class="bg-white rounded-t-xl shadow border-b flex" role="tablist" aria-label="功能分頁">
-      <button onclick="switchTab('students')" id="tab-students" class="tab-active px-6 py-4 text-sm transition" role="tab" aria-selected="true" aria-controls="page-students">👥 學生管理</button>
-      <button onclick="switchTab('records')" id="tab-records" class="tab-inactive px-6 py-4 text-sm transition" role="tab" aria-selected="false" aria-controls="page-records">📝 記點紀錄</button>
-      <button onclick="switchTab('ranking')" id="tab-ranking" class="tab-inactive px-6 py-4 text-sm transition" role="tab" aria-selected="false" aria-controls="page-ranking">🏆 記點排行</button>
+      <button onclick="switchTab('students')" id="tab-students" class="tab-active px-6 py-4 text-sm transition" role="tab" aria-selected="true" aria-controls="page-students"> 學生管理</button>
+      <button onclick="switchTab('records')" id="tab-records" class="tab-inactive px-6 py-4 text-sm transition" role="tab" aria-selected="false" aria-controls="page-records"> 記點紀錄</button>
+      <button onclick="switchTab('ranking')" id="tab-ranking" class="tab-inactive px-6 py-4 text-sm transition" role="tab" aria-selected="false" aria-controls="page-ranking"> 記點排行</button>
     </div>
 
     <div id="page-students" class="bg-white rounded-b-xl shadow p-6 fade-in" role="tabpanel" aria-labelledby="tab-students">
@@ -905,7 +905,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
         <div class="flex gap-2 flex-wrap">
           <button onclick="openPasteModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 focus:ring-2 focus:ring-blue-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
-            📋 貼上匯入
+             貼上匯入
           </button>
           <button onclick="openAddModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 focus:ring-2 focus:ring-emerald-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
@@ -916,7 +916,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
 
       <div class="mb-4">
         <label for="studentSearch" class="sr-only">搜尋學生</label>
-        <input type="text" id="studentSearch" oninput="debouncedFilterStudents()" placeholder="🔍 搜尋姓名、學號、寢室..." 
+        <input type="text" id="studentSearch" oninput="debouncedFilterStudents()" placeholder=" 搜尋姓名、學號、寢室..." 
           class="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none text-sm"
           autocomplete="off">
       </div>
@@ -1042,14 +1042,14 @@ button:not(:disabled):active{transform:scale(.985)!important}
   <div id="pasteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" role="dialog" aria-modal="true" aria-labelledby="pasteModalTitle">
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto modal-enter">
       <div class="flex justify-between items-center mb-4">
-        <h3 id="pasteModalTitle" class="text-lg font-bold text-gray-800">📋 從 Excel 貼上匯入</h3>
+        <h3 id="pasteModalTitle" class="text-lg font-bold text-gray-800"> 從 Excel 貼上匯入</h3>
         <button onclick="closePasteModal()" class="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition" aria-label="關閉">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
 
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 text-sm text-blue-800">
-        <p class="font-medium mb-2">💡 使用方法：</p>
+        <p class="font-medium mb-2"> 使用方法：</p>
         <ol class="list-decimal list-inside space-y-1 text-xs">
           <li>在 Excel 裡整理好學生資料（姓名、學號、寢室、床號、班級）</li>
           <li>選取全部內容（包含標題列）→ 按 <kbd class="bg-white px-1 rounded border">Ctrl+C</kbd> 複製</li>
@@ -1137,7 +1137,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
               </select>
             </div>
             <div class="pt-2">
-              <button type="submit" id="editSubmitBtn" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">💾 儲存變更</button>
+              <button type="submit" id="editSubmitBtn" class="w-full px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"> 儲存變更</button>
             </div>
           </form>
         </div>
@@ -1166,7 +1166,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
                 <input type="text" name="reason" required maxlength="200" placeholder="例如：主動打掃、認錯態度良好..." class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
               </div>
               <button type="submit" id="deductSubmitBtn" class="w-full px-3 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                ✓ 確認消點
+                 確認消點
               </button>
             </form>
           </div>
@@ -1376,7 +1376,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
         renderStats(json);
       } catch (e) {
         console.error('載入統計失敗', e);
-        showToast('❌ 載入統計失敗：' + e.message);
+        showToast(' 載入統計失敗：' + e.message);
       }
     }
 
@@ -1396,7 +1396,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
         renderStudents(allStudents);
       } catch (e) {
         tbody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-red-400">載入失敗：${escapeHTML(e.message)}</td></tr>`;
-        showToast('❌ 載入學生資料失敗：' + e.message);
+        showToast(' 載入學生資料失敗：' + e.message);
       }
     }
 
@@ -1412,9 +1412,9 @@ button:not(:disabled):active{transform:scale(.985)!important}
 
       tbody.innerHTML = students.map(s => {
         const roleClass = s.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800';
-        const roleText = s.role === 'admin' ? '👑 管理員' : '👤 學生';
+        const roleText = s.role === 'admin' ? ' 管理員' : ' 學生';
         const lineClass = s.line_user_id ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
-        const lineText = s.line_user_id ? '✅ 已綁定' : '⏳ 未綁定';
+        const lineText = s.line_user_id ? ' 已綁定' : '⏳ 未綁定';
         const adminBtnClass = s.role === 'admin' ? 'border-purple-300 text-purple-700 hover:bg-purple-50' : 'border-gray-300 text-gray-600 hover:bg-gray-50';
         const adminBtnText = s.role === 'admin' ? '取消管理員' : '設為管理員';
 
@@ -1492,7 +1492,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
         renderRecords(allRecordsData);
       } catch (e) {
         tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-red-400">載入失敗：${escapeHTML(e.message)}</td></tr>`;
-        showToast('❌ 載入記點紀錄失敗：' + e.message);
+        showToast(' 載入記點紀錄失敗：' + e.message);
       }
     }
 
@@ -1552,7 +1552,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
         }).join('');
       } catch (e) {
         container.innerHTML = `<div class="text-center text-red-400 py-8">載入失敗：${escapeHTML(e.message)}</div>`;
-        showToast('❌ 載入排行榜失敗：' + e.message);
+        showToast(' 載入排行榜失敗：' + e.message);
       }
     }
 
@@ -1606,7 +1606,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
       totalEl.className = 'px-2 py-1.5 bg-white border border-gray-200 rounded text-sm font-bold ' + (totalPoints > 0 ? 'text-red-600' : 'text-emerald-600');
 
       if (!records.length) {
-        container.innerHTML = '<div class="text-sm text-gray-400 text-center py-4">暫無記點紀錄 👍</div>';
+        container.innerHTML = '<div class="text-sm text-gray-400 text-center py-4">暫無記點紀錄 </div>';
         return;
       }
 
@@ -1614,7 +1614,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
         const pointClass = r.points < 0 ? 'text-emerald-600 bg-emerald-50' : 'text-red-600 bg-red-50';
         const pointPrefix = r.points > 0 ? '+' : '';
         const cancelBtn = r.points > 0
-          ? `<button onclick="cancelRecord('${escapeHTML(r.id)}', '${escapeHTML(r.violation_date)}', ${r.points})" class="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition border border-emerald-200" title="消點（刪除這筆紀錄）">✕ 消點</button>`
+          ? `<button onclick="cancelRecord('${escapeHTML(r.id)}', '${escapeHTML(r.violation_date)}', ${r.points})" class="opacity-0 group-hover:opacity-100 text-xs px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition border border-emerald-200" title="消點（刪除這筆紀錄）"> 消點</button>`
           : '';
 
         return `<div class="bg-gray-50 rounded-lg p-3 text-sm border border-gray-100 group hover:border-emerald-300 transition">
@@ -1638,12 +1638,12 @@ button:not(:disabled):active{transform:scale(.985)!important}
           method: 'DELETE',
           body: JSON.stringify({ id: recordId })
         });
-        showToast('✅ 已消點');
+        showToast(' 已消點');
         if (currentDetailStudentId) loadStudentRecords(currentDetailStudentId);
         loadStats(true);
         if (currentTab === 'records') loadRecords();
         if (currentTab === 'ranking') loadRanking();
-      } catch (e) { showToast('❌ 消點失敗：' + e.message); }
+      } catch (e) { showToast(' 消點失敗：' + e.message); }
     }
 
     async function submitEditStudent(e) {
@@ -1659,7 +1659,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
         role: form.role.value
       };
       if (!data.name || !data.student_number || !data.room || !data.bed) {
-        showToast('❌ 請填寫所有必填欄位');
+        showToast(' 請填寫所有必填欄位');
         return;
       }
       setButtonLoading('editSubmitBtn', true);
@@ -1668,14 +1668,14 @@ button:not(:disabled):active{transform:scale(.985)!important}
           method: 'PUT',
           body: JSON.stringify(data)
         });
-        showToast('✅ 學生資料已更新');
+        showToast(' 學生資料已更新');
         closeStudentDetail();
         loadStudents();
         loadStats(true);
       } catch (e) {
-        showToast('❌ 更新失敗：' + e.message);
+        showToast(' 更新失敗：' + e.message);
       } finally {
-        setButtonLoading('editSubmitBtn', false, '💾 儲存變更');
+        setButtonLoading('editSubmitBtn', false, ' 儲存變更');
       }
     }
 
@@ -1685,9 +1685,9 @@ button:not(:disabled):active{transform:scale(.985)!important}
       const studentId = form.student_id.value;
       const points = parseInt(form.points.value, 10);
       const reason = form.reason.value.trim();
-      if (!studentId) { showToast('❌ 請先選擇學生'); return; }
-      if (!points || points < 1) { showToast('❌ 消點數必須大於 0'); return; }
-      if (!reason) { showToast('❌ 請填寫消點原因'); return; }
+      if (!studentId) { showToast(' 請先選擇學生'); return; }
+      if (!points || points < 1) { showToast(' 消點數必須大於 0'); return; }
+      if (!reason) { showToast(' 請填寫消點原因'); return; }
 
       setButtonLoading('deductSubmitBtn', true);
       try {
@@ -1699,7 +1699,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
             reason: reason
           })
         });
-        showToast(`✅ 已消點 ${points} 點`);
+        showToast(` 已消點 ${points} 點`);
         form.reset();
         form.student_id.value = studentId;
         loadStudentRecords(studentId);
@@ -1707,9 +1707,9 @@ button:not(:disabled):active{transform:scale(.985)!important}
         if (currentTab === 'records') loadRecords();
         if (currentTab === 'ranking') loadRanking();
       } catch (e) {
-        showToast('❌ 消點失敗：' + e.message);
+        showToast(' 消點失敗：' + e.message);
       } finally {
-        setButtonLoading('deductSubmitBtn', false, '✓ 確認消點');
+        setButtonLoading('deductSubmitBtn', false, ' 確認消點');
       }
     }
 
@@ -1759,17 +1759,17 @@ button:not(:disabled):active{transform:scale(.985)!important}
           method: 'POST',
           body: JSON.stringify(data)
         });
-        showToast('✅ 新增學生成功！');
+        showToast(' 新增學生成功！');
         closeAddModal();
         loadStudents();
         loadStats(true);
       } catch (e) {
         const msg = e.message || '';
         if (msg.includes('duplicate key') && msg.includes('student_number')) {
-          showToast('❌ 新增失敗：該學號已存在');
+          showToast(' 新增失敗：該學號已存在');
           document.getElementById('addStudentNumber').focus();
         } else {
-          showToast('❌ 新增失敗：' + e.message);
+          showToast(' 新增失敗：' + e.message);
         }
       } finally {
         setButtonLoading('addSubmitBtn', false, '新增');
@@ -1810,7 +1810,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
 
       const lines = raw.split(/\r?\n/).filter(l => l.trim());
       if (lines.length < 2) {
-        errorDiv.textContent = '❌ 至少需要標題列 + 一筆資料';
+        errorDiv.textContent = ' 至少需要標題列 + 一筆資料';
         errorDiv.classList.remove('hidden');
         return;
       }
@@ -1829,7 +1829,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
       });
 
       if (headerMap.name === undefined || headerMap.room === undefined || headerMap.bed === undefined) {
-        errorDiv.innerHTML = '❌ 找不到必要欄位：姓名、寢室、床號<br>請確認標題列包含這些欄位名稱';
+        errorDiv.innerHTML = ' 找不到必要欄位：姓名、寢室、床號<br>請確認標題列包含這些欄位名稱';
         errorDiv.classList.remove('hidden');
         return;
       }
@@ -1860,7 +1860,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
       }
 
       if (pasteImportData.length === 0) {
-        errorDiv.textContent = '❌ 沒有解析到有效資料，請檢查格式';
+        errorDiv.textContent = ' 沒有解析到有效資料，請檢查格式';
         errorDiv.classList.remove('hidden');
         return;
       }
@@ -1878,14 +1878,14 @@ button:not(:disabled):active{transform:scale(.985)!important}
         }
       });
       if (dupes.length > 0) {
-        errorDiv.innerHTML = '❌ 匯入資料中發現重複學號：<br>' + dupes.slice(0, 5).join('<br>') + (dupes.length > 5 ? '<br>...還有更多' : '');
+        errorDiv.innerHTML = ' 匯入資料中發現重複學號：<br>' + dupes.slice(0, 5).join('<br>') + (dupes.length > 5 ? '<br>...還有更多' : '');
         errorDiv.classList.remove('hidden');
         submitBtn.disabled = true;
         return;
       }
 
       if (errors.length > 0 && errors.length <= 3) {
-        errorDiv.innerHTML = '⚠️ ' + errors.join('<br>');
+        errorDiv.innerHTML = ' ' + errors.join('<br>');
         errorDiv.classList.remove('hidden');
       }
 
@@ -1919,7 +1919,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
           method: 'POST',
           body: JSON.stringify(pasteImportData)
         });
-        showToast(`✅ 成功匯入 ${pasteImportData.length} 筆學生資料！`);
+        showToast(` 成功匯入 ${pasteImportData.length} 筆學生資料！`);
         closePasteModal();
         loadStudents();
         loadStats(true);
@@ -1929,21 +1929,21 @@ button:not(:disabled):active{transform:scale(.985)!important}
         if (msg.includes('duplicate key') && msg.includes('student_number')) {
           const match = msg.match(/\(([^)]+)\)/);
           const dupValue = match ? match[1] : '';
-          errorDiv.innerHTML = `❌ 學號重複：「<b>${escapeHTML(dupValue)}</b>」已存在於資料庫中。<br><br>
+          errorDiv.innerHTML = ` 學號重複：「<b>${escapeHTML(dupValue)}</b>」已存在於資料庫中。<br><br>
             請檢查：<br>
             1. 該學號是否已經匯入過？<br>
             2. Excel 中是否有重複的學號？<br>
             3. 若為同一人，請使用「查看」→「編輯」修改現有資料。`;
           errorDiv.classList.remove('hidden');
-          showToast('❌ 匯入失敗：學號重複');
+          showToast(' 匯入失敗：學號重複');
         } else if (msg.includes('duplicate key')) {
-          errorDiv.textContent = '❌ 匯入失敗：資料重複（可能是學號或姓名+寢室組合已存在）';
+          errorDiv.textContent = ' 匯入失敗：資料重複（可能是學號或姓名+寢室組合已存在）';
           errorDiv.classList.remove('hidden');
-          showToast('❌ 匯入失敗：資料重複');
+          showToast(' 匯入失敗：資料重複');
         } else {
-          errorDiv.textContent = '❌ 匯入失敗：' + msg;
+          errorDiv.textContent = ' 匯入失敗：' + msg;
           errorDiv.classList.remove('hidden');
-          showToast('❌ 匯入失敗：' + msg);
+          showToast(' 匯入失敗：' + msg);
         }
         btn.disabled = false;
       } finally {
@@ -2007,7 +2007,7 @@ button:not(:disabled):active{transform:scale(.985)!important}
 
       const dateStr = new Date().toISOString().slice(0, 10);
       XLSX.writeFile(wb, `宿舍記點報表_${dateStr}.xlsx`);
-      showToast('✅ Excel 報表已下載');
+      showToast(' Excel 報表已下載');
     }
 
     // ========================================================
@@ -2174,9 +2174,9 @@ button:not(:disabled):active{transform:scale(.985)!important}
 
         const dateStr = new Date().toISOString().slice(0, 10);
         XLSX.writeFile(wb, `宿舍目前累計點數_${dateStr}.xlsx`);
-        showToast('✅ 目前點數報表已下載');
+        showToast(' 目前點數報表已下載');
       } catch (e) {
-        showToast('❌ 匯出失敗：' + e.message);
+        showToast(' 匯出失敗：' + e.message);
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -2192,9 +2192,9 @@ button:not(:disabled):active{transform:scale(.985)!important}
           method: 'PUT',
           body: JSON.stringify({ id, role: newRole })
         });
-        showToast(newRole === 'admin' ? '✅ 已設為管理員' : '✅ 已取消管理員');
+        showToast(newRole === 'admin' ? ' 已設為管理員' : ' 已取消管理員');
         loadStudents();
-      } catch (e) { showToast('❌ 更新失敗：' + e.message); }
+      } catch (e) { showToast(' 更新失敗：' + e.message); }
     }
 
     async function deleteStudent(id, name) {
@@ -2204,10 +2204,10 @@ button:not(:disabled):active{transform:scale(.985)!important}
           method: 'DELETE',
           body: JSON.stringify({ id })
         });
-        showToast('✅ 已刪除');
+        showToast(' 已刪除');
         loadStudents();
         loadStats(true);
-      } catch (e) { showToast('❌ 刪除失敗：' + e.message); }
+      } catch (e) { showToast(' 刪除失敗：' + e.message); }
     }
 
     let toastTimer = null;
@@ -2237,5 +2237,393 @@ button:not(:disabled):active{transform:scale(.985)!important}
       checkGateOnLoad();
     });
   </script>
+<style>
+/* ============================================================
+   VISUAL REDESIGN v3
+   高擬真校園行政產品風格
+   - 只改視覺
+   - 不改資料 / API / JS / 事件 / 商業邏輯
+   ============================================================ */
+
+:root{
+  --brand:#315746;
+  --brand-2:#416b58;
+  --brand-3:#dfe9e1;
+  --ink:#202b25;
+  --muted:#78827c;
+  --paper:#f6f5f1;
+  --surface:#ffffff;
+  --surface-2:#fbfbf8;
+  --line:#e3e5df;
+  --line-2:#cfd5ce;
+  --gold:#b68d4d;
+  --blue:#607991;
+  --red:#a76760;
+  --shadow:0 12px 35px rgba(29,42,35,.075);
+  --shadow-lg:0 24px 65px rgba(29,42,35,.13);
+}
+
+/* ---------- base ---------- */
+html{scroll-behavior:smooth}
+body{
+  color:var(--ink);
+  background:
+    radial-gradient(circle at 8% 4%,rgba(182,141,77,.065),transparent 24%),
+    radial-gradient(circle at 92% 18%,rgba(49,87,70,.055),transparent 28%),
+    var(--paper);
+  font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  letter-spacing:.008em;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  opacity:.18;
+  background-image:linear-gradient(
+    rgba(38,48,42,.022) 1px,transparent 1px
+  );
+  background-size:100% 6px;
+}
+
+/* ---------- page entrance ---------- */
+main{
+  animation:contentReveal .5s cubic-bezier(.22,.61,.36,1);
+}
+@keyframes contentReveal{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+
+/* ---------- header：保留品牌感，但更像真正產品 ---------- */
+nav.bg-emerald-600{
+  background:
+    linear-gradient(115deg,#2b4a3b 0%,#315746 45%,#416b58 100%) !important;
+  box-shadow:0 10px 32px rgba(35,53,44,.15);
+  border-bottom:1px solid rgba(255,255,255,.12);
+  position:relative;
+  overflow:hidden;
+}
+nav.bg-emerald-600::before{
+  content:"";
+  position:absolute;
+  width:430px;
+  height:430px;
+  right:-230px;
+  top:-330px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.075);
+  box-shadow:
+    0 0 0 35px rgba(255,255,255,.018),
+    0 0 0 72px rgba(255,255,255,.014);
+}
+nav.bg-emerald-600::after{
+  content:"";
+  position:absolute;
+  left:-35%;
+  top:0;
+  width:28%;
+  height:100%;
+  transform:skewX(-18deg);
+  background:linear-gradient(
+    90deg,transparent,rgba(255,255,255,.11),transparent
+  );
+  animation:headerGlint 9s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes headerGlint{
+  0%,66%{left:-35%;opacity:0}
+  72%{opacity:1}
+  88%,100%{left:125%;opacity:0}
+}
+nav.bg-emerald-600>div{position:relative;z-index:2;min-height:70px}
+nav h1{
+  letter-spacing:.065em;
+  font-weight:750;
+}
+nav .text-sm{opacity:.78}
+nav button{
+  border:1px solid rgba(255,255,255,.16) !important;
+  background:rgba(255,255,255,.07) !important;
+  border-radius:8px !important;
+  box-shadow:none !important;
+  transition:all .2s ease;
+}
+nav button:hover{
+  background:rgba(255,255,255,.14) !important;
+  transform:translateY(-1px);
+}
+
+/* ---------- stats：不再是四張同質 SaaS 卡片 ---------- */
+#statsSection{
+  position:relative;
+  gap:0 !important;
+  background:rgba(255,255,255,.66);
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 8px 28px rgba(30,42,35,.045);
+}
+#statsSection>div{
+  position:relative;
+  min-height:118px;
+  border:0 !important;
+  border-left:1px solid var(--line) !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  background:rgba(255,255,255,.78);
+  transition:background .25s ease,transform .25s ease;
+}
+#statsSection>div:first-child{border-left:0 !important}
+#statsSection>div::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:0;
+  height:2px;
+  transform:scaleX(.2);
+  transform-origin:left;
+  background:var(--brand);
+  opacity:.55;
+  transition:transform .3s ease;
+}
+#statsSection>div:nth-child(2)::after{background:var(--blue)}
+#statsSection>div:nth-child(3)::after{background:var(--gold)}
+#statsSection>div:nth-child(4)::after{background:var(--red)}
+#statsSection>div:hover{
+  transform:translateY(-2px);
+  background:#fff;
+}
+#statsSection>div:hover::after{transform:scaleX(1)}
+#statsSection .text-gray-500{
+  color:var(--muted);
+  font-size:.78rem;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+#statsSection .text-3xl{
+  color:var(--ink);
+  font-size:2.15rem;
+  font-weight:750;
+  letter-spacing:-.045em;
+}
+
+/* ---------- navigation：用「編輯器」式分區，不用 emoji ---------- */
+[role="tablist"]{
+  display:flex;
+  align-items:flex-end;
+  gap:2px;
+  padding:0 8px;
+  background:rgba(255,255,255,.86);
+  border:1px solid var(--line) !important;
+  border-radius:12px 12px 0 0;
+  box-shadow:0 5px 20px rgba(35,48,41,.035);
+}
+[role="tablist"] button{
+  position:relative;
+  color:#78817c;
+  font-weight:600;
+  letter-spacing:.035em;
+  border-bottom:2px solid transparent !important;
+  transition:color .2s ease,background .2s ease,transform .2s ease;
+}
+[role="tablist"] button::after{
+  content:"";
+  position:absolute;
+  left:18%;
+  right:18%;
+  bottom:-2px;
+  height:2px;
+  background:var(--brand);
+  transform:scaleX(0);
+  transition:transform .25s cubic-bezier(.22,.61,.36,1);
+}
+[role="tablist"] button:hover{
+  color:var(--ink);
+  background:#f7f8f5;
+}
+[role="tablist"] button.tab-active{
+  color:var(--brand) !important;
+  background:#f7f9f6;
+}
+[role="tablist"] button.tab-active::after{transform:scaleX(1)}
+
+/* ---------- content canvas ---------- */
+#page-students,
+#page-records,
+#page-ranking{
+  background:rgba(255,255,255,.93);
+  border:1px solid var(--line);
+  border-top:0;
+  border-radius:0 0 12px 12px;
+  box-shadow:0 16px 42px rgba(31,43,36,.055);
+}
+
+/* ---------- section headings ---------- */
+#page-students h2,
+#page-records h2,
+#page-ranking h2{
+  font-weight:760;
+  letter-spacing:.04em;
+}
+#page-students p,
+#page-records p,
+#page-ranking p{color:var(--muted)}
+
+/* ---------- controls ---------- */
+input,select,textarea{
+  background:#fcfcfa !important;
+  border:1px solid var(--line-2) !important;
+  border-radius:8px !important;
+  box-shadow:inset 0 1px 1px rgba(30,40,35,.02);
+  transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;
+}
+input:hover,select:hover,textarea:hover{
+  background:#fff !important;
+  border-color:#b9c5ba !important;
+}
+input:focus,select:focus,textarea:focus{
+  background:#fff !important;
+  border-color:var(--brand) !important;
+  box-shadow:0 0 0 3px rgba(49,87,70,.10) !important;
+  outline:none !important;
+}
+
+/* ---------- primary actions ---------- */
+button.bg-emerald-600{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(135deg,var(--brand),var(--brand-2)) !important;
+  border-radius:8px !important;
+  box-shadow:0 5px 14px rgba(49,87,70,.15);
+}
+button.bg-emerald-600::after,
+button.bg-blue-600::after,
+button.bg-orange-500::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(
+    105deg,transparent 35%,rgba(255,255,255,.16) 50%,transparent 65%
+  );
+  transform:translateX(-130%);
+  transition:transform .55s ease;
+  pointer-events:none;
+}
+button.bg-emerald-600:hover::after,
+button.bg-blue-600:hover::after,
+button.bg-orange-500:hover::after{
+  transform:translateX(130%);
+}
+button.bg-emerald-600:hover{
+  background:linear-gradient(135deg,#294d3c,#3d6954) !important;
+  box-shadow:0 8px 19px rgba(49,87,70,.20);
+}
+
+/* ---------- table：把「資料」當成主角 ---------- */
+table{
+  border-collapse:separate;
+  border-spacing:0;
+}
+table thead th{
+  background:#eef1ed !important;
+  color:#5d6861 !important;
+  font-size:.76rem;
+  font-weight:700;
+  letter-spacing:.065em;
+  border-bottom:1px solid var(--line-2);
+}
+table tbody tr{
+  background:rgba(255,255,255,.75);
+  transition:background .16s ease,box-shadow .16s ease;
+}
+table tbody tr:hover{
+  background:#f5f8f4 !important;
+  box-shadow:inset 3px 0 0 rgba(49,87,70,.45);
+}
+table td{border-bottom-color:#e9ece8 !important}
+
+/* ---------- badges：精準、少量 ---------- */
+table span.rounded-full{
+  box-shadow:none !important;
+  font-weight:650;
+}
+
+/* ---------- ranking ---------- */
+#rankingContent>div{
+  background:linear-gradient(135deg,#fff,#fafbf8) !important;
+  border:1px solid var(--line);
+  border-radius:9px;
+  box-shadow:0 5px 16px rgba(30,42,35,.04);
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease;
+}
+#rankingContent>div:hover{
+  transform:translateX(5px);
+  border-color:#c5d0c6;
+  box-shadow:0 11px 24px rgba(30,42,35,.08);
+}
+
+/* ---------- modal：高擬真、少裝飾 ---------- */
+#addModal,#pasteModal,#detailModal{
+  background:rgba(24,33,28,.48) !important;
+  backdrop-filter:blur(10px);
+}
+#addModal>div,#pasteModal>div,#detailModal>div{
+  background:#fbfbf8;
+  border:1px solid rgba(227,229,223,.98);
+  border-radius:12px;
+  box-shadow:var(--shadow-lg);
+  animation:modalRise .28s cubic-bezier(.22,.61,.36,1);
+}
+@keyframes modalRise{
+  from{opacity:0;transform:translateY(12px) scale(.985)}
+  to{opacity:1;transform:none}
+}
+
+/* ---------- toast ---------- */
+#toast{
+  background:rgba(42,57,49,.97);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:9px;
+  box-shadow:0 16px 38px rgba(25,35,29,.23);
+  backdrop-filter:blur(10px);
+}
+
+/* ---------- login ---------- */
+#gateOverlay{
+  background:
+    radial-gradient(circle at 15% 15%,rgba(182,141,77,.12),transparent 26%),
+    radial-gradient(circle at 85% 80%,rgba(49,87,70,.12),transparent 30%),
+    #f1f2ee;
+}
+#gateOverlay>div{
+  background:rgba(255,255,252,.97);
+  border:1px solid var(--line);
+  border-radius:13px;
+  box-shadow:var(--shadow-lg);
+}
+
+/* ---------- scrollbar ---------- */
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-track{background:#edf0ec}
+::-webkit-scrollbar-thumb{
+  background:#b8c2ba;
+  border:2px solid #edf0ec;
+  border-radius:999px;
+}
+::-webkit-scrollbar-thumb:hover{background:#94a298}
+
+/* ---------- reduced motion ---------- */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+    scroll-behavior:auto !important;
+  }
+}
+</style>
 </body>
 </html>
